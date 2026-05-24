@@ -154,6 +154,8 @@
     #searchInput { width: 0; padding: 0; border: none; background: var(--input-bg); color: var(--text-primary); border-radius: 20px; transition: width 0.3s ease, padding 0.3s ease, border 0.1s; outline: none; font-size: 14px; }
     #searchInput.active { width: 220px; padding: 8px 16px; border: 1px solid var(--border-color); }
     #searchInput.active:focus { border-color: var(--accent); }
+
+    #imagePreview:focus { border-color: var(--accent); background: rgba(99, 102, 241, 0.05); }
   </style>
 </head>
 <body class="dark-mode">
@@ -350,10 +352,13 @@
     <form class="card-container" id="workForm" style="max-width: 700px; margin: 0 auto;">
       <h2 style="text-align: center; margin-bottom: 32px;">작품 DB 등록</h2>
       <div class="form-group" style="text-align: center;">
-        <label>커버/포스터 이미지 (클릭하여 선택)</label>
-        <div id="imagePreview" onclick="document.getElementById('coverImage').click()" style="width: 200px; height: 200px; background: var(--bg-surface-hover); border-radius: 12px; margin: 0 auto 16px; background-size: cover; border: 2px dashed var(--border-color); cursor: pointer; display: flex; align-items: center; justify-content: center;">
-          <span id="previewPlaceholder" style="color: var(--text-secondary); font-size: 14px;">사진 선택</span>
+        <label>커버/포스터 이미지</label>
+        <div id="imagePreview" tabindex="0" style="width: 200px; height: 200px; background: var(--bg-surface-hover); border-radius: 12px; margin: 0 auto 16px; background-size: cover; border: 2px dashed var(--border-color); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; padding: 20px; outline: none;">
+          <span id="previewPlaceholder" style="color: var(--text-secondary); font-size: 14px; text-align: center;">
+            사각형을 클릭(선택) 후<br>Ctrl+V로 붙여넣기
+          </span>
         </div>
+        <button type="button" class="nav-btn" style="margin: 0 auto 16px; background: var(--bg-surface-hover); border: 1px solid var(--border-color); display: flex;" onclick="document.getElementById('coverImage').click()">파일 선택</button>
         <input type="file" id="coverImage" accept="image/*" style="display: none;">
       </div>
       <div id="musicSubCategory" class="form-group" style="display: none;">
@@ -371,7 +376,11 @@
         </div>
       </div>
       <div class="form-group"><label id="labelTitle">작품 제목</label><input type="text" id="inputTitle" required placeholder="예: Inception"></div>
-      <div class="form-group"><label id="labelCreator">제작자 (아티스트/감독/개발사)</label><input type="text" id="inputCreator" required placeholder="예: Christopher Nolan"></div>
+      <div class="form-group">
+        <label id="labelCreator">제작자 (아티스트/감독/개발사)</label>
+        <input type="text" id="inputCreator" required placeholder="예: Christopher Nolan" list="creatorSuggestions">
+        <datalist id="creatorSuggestions"></datalist>
+      </div>
       <div class="form-group" id="castGroup" style="display: none;"><label>출연진</label><input type="text" id="inputCast" placeholder="예: Leonardo DiCaprio"></div>
       <div class="row" style="display: flex; gap: 20px;">
         <div class="form-group" style="flex: 1;"><label>장르</label><select id="genreSelect"></select></div>
@@ -491,6 +500,17 @@
         }
 
         this.renderHome();
+        this.updateCreatorSuggestions();
+      },
+
+      updateCreatorSuggestions() {
+        const datalist = document.getElementById('creatorSuggestions');
+        if (!datalist) return;
+        const creators = [...new Set(this.allWorks
+          .filter(w => w.category === this.currentCategory)
+          .map(w => w.creator))]
+          .sort();
+        datalist.innerHTML = creators.map(c => `<option value="${c}">`).join('');
       },
 
       navigate(pageId) {
@@ -860,6 +880,8 @@
 
         document.getElementById('workForm').onsubmit = async (e) => {
           e.preventDefault();
+          if (!this.currentUser) return alert('로그인이 필요한 서비스입니다.');
+          
           const workData = {
             category: this.currentCategory, title: document.getElementById('inputTitle').value,
             creator: document.getElementById('inputCreator').value, cast: document.getElementById('inputCast').value,
@@ -882,10 +904,32 @@
               alert('등록되었습니다.');
             }
             this.navigate('home');
-          } catch(err) { alert('저장 권한이 없습니다.'); }
+          } catch(err) { 
+            console.error(err);
+            alert('저장 실패: ' + err.message); 
+          }
         };
 
         document.getElementById('addGenreBtn').onclick = () => this.addGenre();
+
+        // Add Global Paste Event
+        window.addEventListener('paste', (e) => {
+          if (!document.getElementById('upload-page').classList.contains('active')) return;
+          const items = e.clipboardData.items;
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+              const blob = items[i].getAsFile();
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                this.tempCover = event.target.result;
+                document.getElementById('imagePreview').style.backgroundImage = `url(${event.target.result})`;
+                document.getElementById('previewPlaceholder').style.display = 'none';
+              };
+              reader.readAsDataURL(blob);
+              break;
+            }
+          }
+        });
       },
 
       processImage(e, type) {
