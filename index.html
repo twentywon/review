@@ -303,7 +303,11 @@
   <main class="page" id="my-page-page">
     <div class="card-container" style="max-width: 100%; display: flex; flex-direction: column; gap: 32px; margin-bottom: 40px;">
       <div style="display: flex; gap: 32px; align-items: center;">
-        <img src="" id="myAvatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--border-color);">
+        <div style="position: relative; cursor: pointer;" onclick="document.getElementById('myAvatarInput').click()">
+          <img src="" id="myAvatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--border-color);">
+          <div style="position: absolute; bottom: 0; right: 0; background: var(--accent); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 2px solid var(--bg-surface);">📷</div>
+        </div>
+        <input type="file" id="myAvatarInput" accept="image/*" style="display: none;" onchange="app.updateMyAvatar(event)">
         <div style="flex-grow: 1;">
           <h3 id="myNickname" style="font-size: 28px; margin-bottom: 8px;"></h3>
           <p id="myEmail" style="color: var(--text-secondary);"></p>
@@ -448,6 +452,7 @@
       tempAvatarBase64: '',
       currentDetailId: null,
       currentEditWorkId: null,
+      currentEditReviewId: null,
 
       init() {
         this.setupAuth();
@@ -701,6 +706,33 @@
         document.querySelector('#upload-page h2').innerText = '작품 정보 수정';
       },
 
+      async updateMyAvatar(e) {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          const base64 = ev.target.result;
+          try {
+            await updateDoc(doc(db, 'users', this.currentUser.uid), { profileImageUrl: base64 });
+            document.getElementById('myAvatar').src = base64;
+            document.getElementById('headerAvatar').src = base64;
+            alert('프로필 사진이 업데이트되었습니다.');
+          } catch(err) { alert('이미지 업데이트 실패: ' + err.message); }
+        };
+        reader.readAsDataURL(file);
+      },
+
+      editReview(id) {
+        const rev = this.allReviews.find(r => r.id === id);
+        if (!rev) return;
+        this.currentEditReviewId = id;
+        document.getElementById('reviewInputSection').style.display = 'block';
+        document.getElementById('reviewText').value = rev.reviewText;
+        document.getElementById('isSpoiler').checked = rev.isSpoiler;
+        this.setRating(rev.rating);
+        document.getElementById('reviewInputSection').scrollIntoView({ behavior: 'smooth' });
+        document.querySelector('#reviewInputSection h3').innerText = '리뷰 수정하기';
+      },
+
       renderReviews() {
         const reviews = this.allReviews.filter(r => r.workId === this.currentDetailId).sort((a,b) => b.timestamp - a.timestamp);
         document.getElementById('reviewCountDisplay').innerText = reviews.length;
@@ -742,6 +774,7 @@
               </div>
               <div style="margin-top: 16px; display: flex; gap: 20px; font-size: 13px;">
                 <button class="like-btn ${liked ? 'liked' : ''}" onclick="app.toggleLike('${rev.id}')">${liked ? '❤️' : '🤍'} 좋아요 ${rev.likes?.length || 0}</button>
+                ${isMe ? `<button class="nav-btn" style="color: var(--accent); font-weight: bold;" onclick="app.editReview('${rev.id}')">수정</button>` : ''}
                 ${(isMe || this.isAdmin) ? `<button class="nav-btn" style="color: #ef4444; font-weight: bold;" onclick="app.deleteReview('${rev.id}')">삭제</button>` : ''}
               </div>
             </div>
@@ -848,16 +881,27 @@
           const captcha = e.target.querySelector('[name="g-recaptcha-response"]')?.value;
           if (!captcha) return alert('캡차 인증을 해주세요.');
 
+          const reviewData = {
+            workId: this.currentDetailId, uid: this.currentUser.uid, rating,
+            reviewText: document.getElementById('reviewText').value, isSpoiler: document.getElementById('isSpoiler').checked,
+            timestamp: Date.now()
+          };
+
           try {
-            await addDoc(collection(db, 'reviews'), {
-              workId: this.currentDetailId, uid: this.currentUser.uid, rating,
-              reviewText: document.getElementById('reviewText').value, isSpoiler: document.getElementById('isSpoiler').checked,
-              likes: [], timestamp: Date.now()
-            });
+            if (this.currentEditReviewId) {
+              await updateDoc(doc(db, 'reviews', this.currentEditReviewId), reviewData);
+              alert('리뷰가 수정되었습니다.');
+              this.currentEditReviewId = null;
+              document.querySelector('#reviewInputSection h3').innerText = '리뷰 남기기';
+            } else {
+              reviewData.likes = [];
+              await addDoc(collection(db, 'reviews'), reviewData);
+              alert('리뷰가 등록되었습니다.');
+            }
             document.getElementById('reviewInputSection').style.display = 'none';
             document.getElementById('reviewSubmitForm').reset();
             this.setRating(0);
-          } catch(err) { alert('저장 실패'); }
+          } catch(err) { alert('저장 실패: ' + err.message); }
         };
 
         document.querySelectorAll('.md-btn').forEach(btn => {
