@@ -139,9 +139,21 @@
 
     .genre-tag { display: inline-flex; align-items: center; padding: 6px 14px; background: var(--bg-surface-hover); border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; gap: 8px; }
     .genre-del-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 18px; line-height: 1; }
+
+    .radio-group { display: flex; gap: 10px; margin-bottom: 12px; }
+    .radio-item { cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-secondary); transition: var(--transition); }
+    .radio-item input { width: 18px !important; height: 18px !important; cursor: pointer; }
+    .radio-item:hover { color: var(--text-primary); }
+    .radio-item input:checked + span { color: var(--accent); font-weight: bold; }
+
     .admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     .admin-table th, .admin-table td { padding: 16px 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
     .admin-table th { color: var(--text-secondary); font-weight: 600; }
+
+    .search-wrapper { display: flex; align-items: center; position: relative; margin-right: 8px; }
+    #searchInput { width: 0; padding: 0; border: none; background: var(--input-bg); color: var(--text-primary); border-radius: 20px; transition: width 0.3s ease, padding 0.3s ease, border 0.1s; outline: none; font-size: 14px; }
+    #searchInput.active { width: 220px; padding: 8px 16px; border: 1px solid var(--border-color); }
+    #searchInput.active:focus { border-color: var(--accent); }
   </style>
 </head>
 <body class="dark-mode">
@@ -156,6 +168,10 @@
       </div>
     </div>
     <nav>
+      <div class="search-wrapper">
+        <input type="text" id="searchInput" placeholder="작품명 또는 제작자 검색...">
+        <button class="nav-btn" id="searchToggleBtn" title="검색" style="font-size: 14px;">🔍 검색</button>
+      </div>
       <button class="nav-btn" onclick="app.navigate('home')">홈</button>
       <button class="nav-btn auth-req" id="nav-my-page" style="display:none" onclick="app.navigate('my-page')">마이페이지</button>
       <button class="nav-btn admin-req" id="nav-admin" style="display:none; color:#ef4444; font-weight:bold;" onclick="app.navigate('admin')">관리자</button>
@@ -200,8 +216,21 @@
   </main>
 
   <main class="page active" id="home-page">
-    <div style="margin-bottom: 32px;"><input type="text" id="searchInput" placeholder="작품명 또는 제작자 검색..." style="border-radius: 40px; padding: 16px 28px; font-size: 16px; background: var(--bg-surface);"></div>
     <div id="homeDefault">
+      <div id="musicFilterSection" style="display: none; margin-bottom: 24px;">
+        <div class="radio-group" id="homeMusicTypeGroup">
+          <label class="radio-item"><input type="radio" name="homeMusicType" value="" checked><span>전체 음악</span></label>
+          <label class="radio-item"><input type="radio" name="homeMusicType" value="domestic"><span>국내음악</span></label>
+          <label class="radio-item"><input type="radio" name="homeMusicType" value="international"><span>해외음악</span></label>
+        </div>
+      </div>
+      <div id="movieFilterSection" style="display: none; margin-bottom: 24px;">
+        <div class="radio-group" id="homeMovieTypeGroup">
+          <label class="radio-item"><input type="radio" name="homeMovieType" value="" checked><span>전체 영화/드라마</span></label>
+          <label class="radio-item"><input type="radio" name="homeMovieType" value="domestic"><span>국내</span></label>
+          <label class="radio-item"><input type="radio" name="homeMovieType" value="international"><span>해외</span></label>
+        </div>
+      </div>
       <h3 style="margin-bottom: 16px; font-size: 22px;">🎯 맞춤 추천</h3>
       <div class="album-slider" id="recSlider"></div>
       <h3 style="margin: 40px 0 16px; font-size: 22px;">✨ 최신 등록</h3>
@@ -321,16 +350,32 @@
     <form class="card-container" id="workForm" style="max-width: 700px; margin: 0 auto;">
       <h2 style="text-align: center; margin-bottom: 32px;">작품 DB 등록</h2>
       <div class="form-group" style="text-align: center;">
-        <label>커버/포스터 이미지</label>
-        <div id="imagePreview" style="width: 200px; height: 200px; background: var(--bg-surface-hover); border-radius: 12px; margin: 0 auto 16px; background-size: cover; border: 2px dashed var(--border-color);"></div>
-        <input type="file" id="coverImage" accept="image/*" style="font-size: 14px;">
+        <label>커버/포스터 이미지 (클릭하여 선택)</label>
+        <div id="imagePreview" onclick="document.getElementById('coverImage').click()" style="width: 200px; height: 200px; background: var(--bg-surface-hover); border-radius: 12px; margin: 0 auto 16px; background-size: cover; border: 2px dashed var(--border-color); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+          <span id="previewPlaceholder" style="color: var(--text-secondary); font-size: 14px;">사진 선택</span>
+        </div>
+        <input type="file" id="coverImage" accept="image/*" style="display: none;">
       </div>
-      <div class="form-group"><label>작품 제목</label><input type="text" id="inputTitle" required placeholder="예: Inception"></div>
-      <div class="form-group"><label>제작자 (아티스트/감독/개발사)</label><input type="text" id="inputCreator" required placeholder="예: Christopher Nolan"></div>
+      <div id="musicSubCategory" class="form-group" style="display: none;">
+        <label>상세 카테고리</label>
+        <div class="radio-group" id="musicTypeGroup">
+          <label class="radio-item"><input type="radio" name="musicType" value="domestic" checked><span>국내음악</span></label>
+          <label class="radio-item"><input type="radio" name="musicType" value="international"><span>해외음악</span></label>
+        </div>
+      </div>
+      <div id="movieSubCategory" class="form-group" style="display: none;">
+        <label>상세 카테고리</label>
+        <div class="radio-group" id="movieTypeGroup">
+          <label class="radio-item"><input type="radio" name="movieType" value="domestic" checked><span>국내</span></label>
+          <label class="radio-item"><input type="radio" name="movieType" value="international"><span>해외</span></label>
+        </div>
+      </div>
+      <div class="form-group"><label id="labelTitle">작품 제목</label><input type="text" id="inputTitle" required placeholder="예: Inception"></div>
+      <div class="form-group"><label id="labelCreator">제작자 (아티스트/감독/개발사)</label><input type="text" id="inputCreator" required placeholder="예: Christopher Nolan"></div>
       <div class="form-group" id="castGroup" style="display: none;"><label>출연진</label><input type="text" id="inputCast" placeholder="예: Leonardo DiCaprio"></div>
       <div class="row" style="display: flex; gap: 20px;">
         <div class="form-group" style="flex: 1;"><label>장르</label><select id="genreSelect"></select></div>
-        <div class="form-group" style="flex: 1;"><label>출시/개봉일</label><input type="date" id="releaseDate"></div>
+        <div class="form-group" style="flex: 1;"><label id="labelDate">출시/개봉일</label><input type="date" id="releaseDate"></div>
       </div>
       <button type="submit" class="action-btn" style="margin-top: 16px; width: 100%;">DB에 저장하기</button>
     </form>
@@ -400,11 +445,51 @@
         this.setupDatabaseListeners();
         this.setupEventListeners();
         this.setCategory('music');
+        document.querySelectorAll('input[name="homeMusicType"]').forEach(radio => {
+          radio.onchange = () => this.renderHome();
+        });
+        document.querySelectorAll('input[name="homeMovieType"]').forEach(radio => {
+          radio.onchange = () => this.renderHome();
+        });
       },
 
       setCategory(catId) {
         this.currentCategory = catId;
         document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.cat === catId));
+        
+        // Update visibility of category-specific filters/fields
+        const musicFilter = document.getElementById('musicFilterSection');
+        if (musicFilter) musicFilter.style.display = (catId === 'music') ? 'block' : 'none';
+        const movieFilter = document.getElementById('movieFilterSection');
+        if (movieFilter) movieFilter.style.display = (catId === 'movie') ? 'block' : 'none';
+        
+        const musicSub = document.getElementById('musicSubCategory');
+        if (musicSub) musicSub.style.display = (catId === 'music') ? 'block' : 'none';
+        const movieSub = document.getElementById('movieSubCategory');
+        if (movieSub) movieSub.style.display = (catId === 'movie') ? 'block' : 'none';
+        
+        const castGrp = document.getElementById('castGroup');
+        if (castGrp) castGrp.style.display = (catId === 'movie') ? 'block' : 'none';
+
+        // Update labels and placeholders in upload form
+        const lTitle = document.getElementById('labelTitle'), iTitle = document.getElementById('inputTitle');
+        const lCreator = document.getElementById('labelCreator'), iCreator = document.getElementById('inputCreator');
+        const lDate = document.getElementById('labelDate');
+        
+        if (catId === 'music') {
+          lTitle.innerText = '앨범 제목'; iTitle.placeholder = '예: Love Yourself';
+          lCreator.innerText = '아티스트'; iCreator.placeholder = '예: 방탄소년단';
+          lDate.innerText = '발매일';
+        } else if (catId === 'movie') {
+          lTitle.innerText = '작품 제목'; iTitle.placeholder = '예: 인셉션';
+          lCreator.innerText = '감독'; iCreator.placeholder = '예: 크리스토퍼 놀란';
+          lDate.innerText = '개봉일';
+        } else if (catId === 'game') {
+          lTitle.innerText = '게임 제목'; iTitle.placeholder = '예: 리그 오브 레전드';
+          lCreator.innerText = '개발사'; iCreator.placeholder = '예: 라이엇 게임즈';
+          lDate.innerText = '발매일';
+        }
+
         this.renderHome();
       },
 
@@ -415,6 +500,7 @@
           if (document.getElementById('workForm')) {
             document.getElementById('workForm').reset();
             document.getElementById('imagePreview').style.backgroundImage = '';
+            document.getElementById('previewPlaceholder').style.display = 'block';
             document.querySelector('#upload-page h2').innerText = '작품 DB 등록';
           }
         }
@@ -488,8 +574,18 @@
       },
 
       renderHome() {
-        const catWorks = this.allWorks.filter(w => w.category === this.currentCategory);
+        let catWorks = this.allWorks.filter(w => w.category === this.currentCategory);
         const searchKeyword = document.getElementById('searchInput').value.toLowerCase().trim();
+
+        if (this.currentCategory === 'music') {
+          const checked = document.querySelector('input[name="homeMusicType"]:checked');
+          const mType = checked ? checked.value : '';
+          if (mType) catWorks = catWorks.filter(w => w.musicType === mType);
+        } else if (this.currentCategory === 'movie') {
+          const checked = document.querySelector('input[name="homeMovieType"]:checked');
+          const mType = checked ? checked.value : '';
+          if (mType) catWorks = catWorks.filter(w => w.movieType === mType);
+        }
 
         if (searchKeyword) {
           document.getElementById('homeDefault').style.display = 'none';
@@ -666,6 +762,12 @@
       },
 
       setupEventListeners() {
+        document.getElementById('searchToggleBtn').onclick = () => {
+          const input = document.getElementById('searchInput');
+          input.classList.toggle('active');
+          if (input.classList.contains('active')) input.focus();
+          else { input.value = ''; this.renderHome(); }
+        };
         document.getElementById('searchInput').oninput = () => this.renderHome();
         document.getElementById('homeGenreSelect').onchange = () => this.renderHome();
         document.getElementById('nav-logout').onclick = () => signOut(auth);
@@ -764,6 +866,13 @@
             genre: document.getElementById('genreSelect').value, releaseDate: document.getElementById('releaseDate').value,
             imageUrl: this.tempCover || '', timestamp: Date.now(), uid: this.currentUser.uid
           };
+          if (this.currentCategory === 'music') {
+            const checked = document.querySelector('input[name="musicType"]:checked');
+            workData.musicType = checked ? checked.value : 'domestic';
+          } else if (this.currentCategory === 'movie') {
+            const checked = document.querySelector('input[name="movieType"]:checked');
+            workData.movieType = checked ? checked.value : 'domestic';
+          }
           try {
             if (this.currentEditWorkId) {
               await updateDoc(doc(db, 'works', this.currentEditWorkId), workData);
@@ -789,6 +898,7 @@
           } else {
             this.tempCover = ev.target.result;
             document.getElementById('imagePreview').style.backgroundImage = `url(${ev.target.result})`;
+            document.getElementById('previewPlaceholder').style.display = 'none';
           }
         };
         reader.readAsDataURL(file);
