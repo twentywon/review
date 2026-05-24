@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>all about REVIEW | Comprehensive Reviews</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <style>
+    :root {
+      --bg-base: #0f172a;
+      --bg-surface: #1e293b;
+      --bg-surface-hover: #334155;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --transition: 0.3s ease;
+      --border-color: rgba(255,255,255,0.1);
+      --input-bg: rgba(0,0,0,0.2);
+    }
+
+    body.light-mode {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-hover: #f1f5f9;
+      --accent: #4f46e5;
+      --accent-hover: #4338ca;
+      --text-primary: #0f172a;
+      --text-secondary: #64748b;
+      --border-color: #cbd5e1;
+      --input-bg: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-base); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; transition: background-color var(--transition), color var(--transition); }
+
+    header { background: var(--bg-base); background-color: rgba(var(--bg-base), 0.8); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-color); padding: 16px 5%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .logo-area { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .logo { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(to right, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; }
+    
+    .category-tabs { display: flex; gap: 8px; }
+    .cat-btn { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: var(--transition); font-size: 14px; font-weight: 600; }
+    .cat-btn:hover { background: var(--bg-surface-hover); color: var(--text-primary); }
+    .cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+
+    nav { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .nav-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 14px; font-weight: 500; cursor: pointer; padding: 8px 12px; border-radius: 8px; transition: var(--transition); display: flex; align-items: center; gap: 6px; }
+    .nav-btn:hover, .nav-btn.active { color: var(--text-primary); background: var(--bg-surface-hover); }
+    .nav-btn.primary { background: var(--accent); color: white; }
+    
+    .user-avatar-mini { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--bg-surface-hover); border: 1px solid var(--border-color); }
+
+    .page { display: none; padding: 40px 5%; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.4s ease forwards; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card-container { max-width: 600px; margin: 0 auto; background: var(--bg-surface); padding: 32px; border-radius: var(--radius-lg); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+    .card-container h2 { margin-bottom: 24px; font-size: 24px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+    .form-group input:not([type="hidden"]):not([type="checkbox"]), .form-group textarea, .form-group select { width: 100%; padding: 14px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 15px; outline: none; transition: 0.2s; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); }
+    .action-btn { width: 100%; padding: 16px; border: none; border-radius: 8px; background: var(--accent); color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: var(--transition); text-align: center; }
+    .action-btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+    .action-btn.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .rating-dist { margin-bottom: 32px; }
+    .dist-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; font-size: 14px; }
+    .dist-label { width: 40px; text-align: right; font-weight: bold; }
+    .dist-bar-bg { flex: 1; height: 10px; background: var(--input-bg); border-radius: 5px; overflow: hidden; }
+    .dist-bar-fill { height: 100%; background: var(--accent); border-radius: 5px; transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .dist-count { width: 30px; color: var(--text-secondary); font-size: 13px; }
+
+    .detail-layout { display: grid; grid-template-columns: 1fr 320px; gap: 40px; margin-top: 32px; align-items: flex-start; }
+    @media (max-width: 900px) { .detail-layout { grid-template-columns: 1fr; } }
+    .sidebar-section { position: sticky; top: 100px; }
+    .mini-work-card { display: flex; gap: 16px; margin-bottom: 16px; cursor: pointer; padding: 12px; border-radius: var(--radius-md); transition: var(--transition); background: var(--bg-surface); border: 1px solid var(--border-color); }
+    .mini-work-card:hover { background: var(--bg-surface-hover); transform: translateX(5px); }
+    .mini-cover { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+    .mini-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+    .mini-info h4 { font-size: 15px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mini-info p { font-size: 13px; color: var(--text-secondary); }
+
+    .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 32px; }
+    .page-num { min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: 0.2s; background: var(--bg-surface); }
+    .page-num:hover { border-color: var(--accent); color: var(--accent); }
+    .page-num.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+    .album-slider { display: flex; overflow-x: auto; gap: 24px; padding-bottom: 20px; scroll-snap-type: x mandatory; }
+    .album-slider::-webkit-scrollbar { display: none; }
+    .album-slider .album-card { flex: 0 0 200px; scroll-snap-align: start; }
+    .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; }
+    
+    .album-card { cursor: pointer; transition: var(--transition); border-radius: var(--radius-md); overflow: hidden; position: relative; }
+    .album-card:hover { transform: translateY(-6px); }
+    .album-cover { width: 100%; aspect-ratio: 1 / 1; background-color: var(--bg-surface); border-radius: var(--radius-md); overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 12px; position: relative; }
+    .album-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .album-info h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .album-info p { font-size: 14px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .avg-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: #fbbf24; font-weight: bold; padding: 4px 8px; border-radius: 8px; font-size: 12px; backdrop-filter: blur(4px); z-index: 2;}
+
+    .detail-hero { display: flex; gap: 40px; background: var(--bg-surface); padding: 40px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); margin-bottom: 24px; }
+    @media (max-width: 768px) { .detail-hero { flex-direction: column; } }
+    .hero-cover { flex-shrink: 0; width: 300px; height: 300px; border-radius: var(--radius-md); overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+    .hero-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .hero-info { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+    .hero-info h2 { font-size: 42px; font-weight: 800; margin-bottom: 8px; line-height: 1.1; }
+    .hero-info h3 { font-size: 20px; color: var(--text-primary); margin-bottom: 8px; }
+    .meta-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+    .tag { background: var(--input-bg); padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; border: 1px solid var(--border-color); }
+    .tag.star { color: #fbbf24; background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.2); }
+
+    .interactive-rating { display: inline-flex; font-size: 32px; color: var(--border-color); cursor: pointer; gap: 6px; padding: 4px 0; }
+    .interactive-rating .star { position: relative; }
+    .interactive-rating .star::after { content: '★'; position: absolute; left: 0; top: 0; color: #fbbf24; overflow: hidden; width: 0%; pointer-events: none; }
+    .interactive-rating .star.full::after { width: 100%; }
+    .interactive-rating .star.half::after { width: 50%; }
+
+    .editor-toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
+    .editor-toolbar button { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: var(--transition); }
+    .editor-toolbar button:hover { background: var(--bg-surface-hover); color: var(--accent); border-color: var(--accent); }
+
+    .review-item-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .review-header { display: flex; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+    .review-user-info { display: flex; align-items: center; gap: 12px; font-weight: 600; }
+    .review-body { font-size: 15px; line-height: 1.6; position: relative; }
+    .review-body blockquote { border-left: 4px solid var(--accent); padding-left: 12px; color: var(--text-secondary); background: var(--input-bg); padding: 8px 12px; border-radius: 4px; }
+    
+    .spoiler-overlay { position: relative; cursor: pointer; }
+    .spoiler-blur { filter: blur(12px); pointer-events: none; transition: 0.3s; }
+    .spoiler-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); border-radius: 8px; font-weight: bold; z-index: 5; backdrop-filter: blur(2px); }
+    .spoiler-msg button { padding: 10px 20px; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; }
+
+    .like-btn { border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); padding: 6px 14px; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; transition: var(--transition); }
+    .like-btn.liked { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444; }
+
+    .genre-tag { display: inline-flex; align-items: center; padding: 6px 14px; background: var(--bg-surface-hover); border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; gap: 8px; }
+    .genre-del-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 18px; line-height: 1; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .admin-table th, .admin-table td { padding: 16px 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .admin-table th { color: var(--text-secondary); font-weight: 600; }
+  </style>
+</head>
+<body class="dark-mode">
+
+  <header>
+    <div class="logo-area">
+      <div class="logo" onclick="app.navigate('home')">all about REVIEW</div>
+      <div class="category-tabs" id="categoryNav">
+        <button class="cat-btn active" data-cat="music">🎵 음악</button>
+        <button class="cat-btn" data-cat="movie">🎬 영화/드라마</button>
+        <button class="cat-btn" data-cat="game">🎮 게임</button>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn" onclick="app.navigate('home')">홈</button>
+      <button class="nav-btn auth-req" id="nav-my-page" style="display:none" onclick="app.navigate('my-page')">마이페이지</button>
+      <button class="nav-btn admin-req" id="nav-admin" style="display:none; color:#ef4444; font-weight:bold;" onclick="app.navigate('admin')">관리자</button>
+      <button class="nav-btn" id="themeToggle">☀️ 라이트</button>
+      <button class="nav-btn auth-req" id="userProfileDisplay" style="display:none; cursor:default">
+        <img src="" class="user-avatar-mini" id="headerAvatar"> <span id="headerNickname"></span>
+      </button>
+      <button class="nav-btn" id="nav-login" onclick="app.navigate('auth')">로그인</button>
+      <button class="nav-btn" id="nav-logout" style="display:none">로그아웃</button>
+      <button class="nav-btn primary auth-req" id="nav-upload" style="display:none" onclick="app.navigate('upload')">+ 새 작품</button>
+    </nav>
+  </header>
+
+  <main class="page" id="auth-page">
+    <div class="card-container" style="max-width: 450px; margin-top: 40px;">
+      <h2 id="authTitle" style="text-align: center;">로그인</h2>
+      <form id="authForm">
+        <div id="signupFields" style="display: none;">
+          <div class="form-group" style="text-align: center;">
+            <div id="signupPreview" style="width: 100px; height: 100px; border-radius: 50%; background: var(--bg-surface-hover); margin: 0 auto 16px; background-size: cover; border: 2px solid var(--border-color);"></div>
+            <input type="file" id="signupAvatarInput" accept="image/*" style="font-size: 13px;">
+          </div>
+          <div class="form-group"><input type="text" id="authNickname" placeholder="닉네임 (활동명)"></div>
+          <div class="row" style="display: flex; gap: 12px;">
+            <div class="form-group" style="flex: 1;"><select id="authGender"><option value="male">남성</option><option value="female">여성</option><option value="private">비공개</option></select></div>
+            <div class="form-group" style="flex: 1;"><input type="number" id="authBirthYear" placeholder="태어난 연도"></div>
+          </div>
+          <div class="form-group" style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="authPrivacy" style="width: auto;"> 개인정보 수집 및 이용 동의
+          </div>
+          <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" style="display: flex; justify-content: center; margin-bottom: 20px;"></div>
+        </div>
+        <div class="form-group"><input type="email" id="authEmail" placeholder="이메일 주소" required></div>
+        <div class="form-group"><input type="password" id="authPassword" placeholder="비밀번호" required minlength="6"></div>
+        <button type="submit" class="action-btn" id="authSubmitBtn" style="width: 100%;">로그인</button>
+      </form>
+      <p style="margin-top: 24px; font-size: 14px; color: var(--text-secondary); text-align: center;">
+        <span id="authToggleText">계정이 없으신가요?</span>
+        <button id="toggleAuthModeBtn" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer">회원가입</button>
+      </p>
+    </div>
+  </main>
+
+  <main class="page active" id="home-page">
+    <div style="margin-bottom: 32px;"><input type="text" id="searchInput" placeholder="작품명 또는 제작자 검색..." style="border-radius: 40px; padding: 16px 28px; font-size: 16px; background: var(--bg-surface);"></div>
+    <div id="homeDefault">
+      <h3 style="margin-bottom: 16px; font-size: 22px;">🎯 맞춤 추천</h3>
+      <div class="album-slider" id="recSlider"></div>
+      <h3 style="margin: 40px 0 16px; font-size: 22px;">✨ 최신 등록</h3>
+      <div class="album-slider" id="latestSlider"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 40px 0 16px;">
+        <h3 style="font-size: 22px;">🏷️ 장르별 작품</h3>
+        <select id="homeGenreSelect" style="width: 180px; padding: 10px;"></select>
+      </div>
+      <div class="album-grid" id="genreGrid"></div>
+    </div>
+    <div id="homeSearch" style="display: none;">
+      <h3 style="margin-bottom: 24px; font-size: 24px;">검색 결과</h3>
+      <div class="album-grid" id="searchGrid"></div>
+    </div>
+  </main>
+
+  <main class="page" id="detail-page">
+    <button onclick="app.navigate('home')" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; margin-bottom:24px; font-size: 16px;">← 홈으로 돌아가기</button>
+    <div id="detailHeroContainer"></div>
+    <div style="margin: 32px 0; text-align: center;">
+      <button class="action-btn" id="toggleReviewBtn" style="width: auto; padding: 14px 48px; display: inline-block;">내 리뷰 작성하기</button>
+    </div>
+    <div id="reviewInputSection" style="display: none; margin-bottom: 40px;" class="card-container">
+      <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">리뷰 남기기</h3>
+      <form id="reviewSubmitForm">
+        <div class="form-group">
+          <label>별점 선택</label>
+          <div class="interactive-rating" id="starRatingUI"></div>
+          <input type="hidden" id="ratingInput">
+        </div>
+        <div class="form-group" style="font-size: 14px; display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="isSpoiler" style="width: auto;"> 이 리뷰에 스포일러가 포함되어 있습니다.
+        </div>
+        <div class="form-group">
+          <label>감상평 (Markdown 지원)</label>
+          <div class="editor-toolbar">
+            <button type="button" class="md-btn" data-prefix="**" data-suffix="**"><b>B</b></button>
+            <button type="button" class="md-btn" data-prefix="*" data-suffix="*"><i>I</i></button>
+            <button type="button" class="md-btn" data-prefix="### " data-suffix="">H3</button>
+            <button type="button" class="md-btn" data-prefix="> " data-suffix="">Quote</button>
+          </div>
+          <textarea id="reviewText" placeholder="작품에 대한 솔직한 생각을 적어주세요." style="min-height: 150px;"></textarea>
+        </div>
+        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" style="display: flex; justify-content: center; margin-bottom: 20px;"></div>
+        <div style="display: flex; gap: 16px;">
+          <button type="submit" class="action-btn" style="flex: 1;">등록 완료</button>
+          <button type="button" class="action-btn" id="cancelReviewBtn" style="flex: 1; background: var(--bg-surface-hover); border: 1px solid var(--border-color); color: var(--text-primary);">취소</button>
+        </div>
+      </form>
+    </div>
+    <div class="detail-layout">
+      <div class="main-content">
+        <div class="card-container rating-dist">
+          <h4 style="margin-bottom: 20px; font-size: 18px;">별점 분포</h4>
+          <div id="ratingChart"></div>
+        </div>
+        <h3 style="margin-bottom: 20px; font-size: 22px;">유저 리뷰 (<span id="reviewCountDisplay">0</span>)</h3>
+        <div id="reviewsList"></div>
+        <div class="pagination" id="reviewPagination"></div>
+      </div>
+      <div class="sidebar-section">
+        <h4 style="margin-bottom: 20px; font-size: 18px;">비슷한 장르 작품</h4>
+        <div id="genreSidebar"></div>
+      </div>
+    </div>
+  </main>
+
+  <main class="page" id="my-page-page">
+    <div class="card-container" style="max-width: 100%; display: flex; flex-direction: column; gap: 32px; margin-bottom: 40px;">
+      <div style="display: flex; gap: 32px; align-items: center;">
+        <img src="" id="myAvatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--border-color);">
+        <div style="flex-grow: 1;">
+          <h3 id="myNickname" style="font-size: 28px; margin-bottom: 8px;"></h3>
+          <p id="myEmail" style="color: var(--text-secondary);"></p>
+        </div>
+        <button class="nav-btn" onclick="document.getElementById('profileEditSection').style.display='block'; this.style.display='none'">프로필 수정</button>
+      </div>
+
+      <div id="profileEditSection" style="display: none; border-top: 1px solid var(--border-color); padding-top: 24px;">
+        <h4 style="margin-bottom: 16px;">프로필 수정</h4>
+        <div class="form-group">
+          <label>닉네임</label>
+          <input type="text" id="editNickname">
+        </div>
+        <div class="row" style="display: flex; gap: 12px;">
+          <div class="form-group" style="flex: 1;">
+            <label>성별</label>
+            <select id="editGender">
+              <option value="male">남성</option>
+              <option value="female">여성</option>
+              <option value="private">비공개</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label>태어난 연도</label>
+            <input type="number" id="editBirthYear">
+          </div>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="editPrivacy" style="width: auto;"> 개인정보 공개 동의</label>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <button class="action-btn" style="flex: 1;" onclick="app.updateProfile()">저장하기</button>
+          <button class="action-btn" style="flex: 1; background: var(--bg-surface-hover); color: var(--text-primary); border: 1px solid var(--border-color);" onclick="document.getElementById('profileEditSection').style.display='none'; document.querySelector('#my-page-page .nav-btn').style.display='block'">취소</button>
+        </div>
+        <div style="margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">계정을 영구적으로 삭제하시겠습니까?</p>
+          <button class="action-btn danger" style="width: auto; padding: 10px 20px;" onclick="app.deleteAccount()">회원 탈퇴</button>
+        </div>
+      </div>
+    </div>
+    <h3 style="margin-bottom: 24px; font-size: 22px;">내가 리뷰한 작품 목록</h3>
+    <div class="album-grid" id="myReviewedGrid"></div>
+  </main>
+
+  <main class="page" id="upload-page">
+    <form class="card-container" id="workForm" style="max-width: 700px; margin: 0 auto;">
+      <h2 style="text-align: center; margin-bottom: 32px;">작품 DB 등록</h2>
+      <div class="form-group" style="text-align: center;">
+        <label>커버/포스터 이미지</label>
+        <div id="imagePreview" style="width: 200px; height: 200px; background: var(--bg-surface-hover); border-radius: 12px; margin: 0 auto 16px; background-size: cover; border: 2px dashed var(--border-color);"></div>
+        <input type="file" id="coverImage" accept="image/*" style="font-size: 14px;">
+      </div>
+      <div class="form-group"><label>작품 제목</label><input type="text" id="inputTitle" required placeholder="예: Inception"></div>
+      <div class="form-group"><label>제작자 (아티스트/감독/개발사)</label><input type="text" id="inputCreator" required placeholder="예: Christopher Nolan"></div>
+      <div class="form-group" id="castGroup" style="display: none;"><label>출연진</label><input type="text" id="inputCast" placeholder="예: Leonardo DiCaprio"></div>
+      <div class="row" style="display: flex; gap: 20px;">
+        <div class="form-group" style="flex: 1;"><label>장르</label><select id="genreSelect"></select></div>
+        <div class="form-group" style="flex: 1;"><label>출시/개봉일</label><input type="date" id="releaseDate"></div>
+      </div>
+      <button type="submit" class="action-btn" style="margin-top: 16px; width: 100%;">DB에 저장하기</button>
+    </form>
+  </main>
+
+  <main class="page" id="admin-page">
+    <h2 style="margin-bottom: 32px;">관리자 대시보드</h2>
+    <div class="card-container" style="max-width: 100%; margin-bottom: 32px;">
+      <h3 style="margin-bottom: 16px;">🏷️ 장르 데이터 관리</h3>
+      <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">카테고리별 장르를 추가하거나 삭제할 수 있습니다.</p>
+      <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+        <select id="adminGenreCat" style="width: 160px;" onchange="app.renderAdminGenres()">
+          <option value="music">음악</option>
+          <option value="movie">영화/드라마</option>
+          <option value="game">게임</option>
+        </select>
+        <input type="text" id="adminGenreInput" placeholder="새 장르 명칭" style="flex: 1; min-width: 200px;">
+        <button class="action-btn" id="addGenreBtn" style="width: auto; padding: 0 32px;">추가</button>
+      </div>
+      <div id="adminGenreList" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+    </div>
+    <div class="card-container" style="max-width: 100%; overflow-x: auto;">
+      <h3 style="margin-bottom: 20px;">👥 사용자 계정 관리</h3>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>계정 이메일</th>
+            <th>닉네임</th>
+            <th>가입일</th>
+            <th>상태</th>
+            <th>관리 작업</th>
+          </tr>
+        </thead>
+        <tbody id="adminUserList"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyCXvGO0Iwiq5Q2fUgblmXBpSB03Vh0EVJo", authDomain: "album-review-d952f.firebaseapp.com", projectId: "album-review-d952f", storageBucket: "album-review-d952f.firebasestorage.app", messagingSenderId: "624730915813", appId: "1:624730915813:web:847c7bb1461989610fe50c" };
+    const firebase_app = initializeApp(firebaseConfig);
+    const auth = getAuth(firebase_app);
+    const db = getFirestore(firebase_app);
+
+    window.app = {
+      currentCategory: 'music',
+      currentUser: null,
+      userProfile: null,
+      isAdmin: false,
+      allWorks: [],
+      allReviews: [],
+      allUsers: {},
+      genres: { music: ['K-Pop', 'Pop', 'Rock', 'Hip-Hop', 'Jazz'], movie: ['액션', '로맨스', '공포', 'SF', '드라마'], game: ['RPG', 'FPS', '액션', '스포츠'] },
+      currentPage: 1,
+      itemsPerPage: 5,
+      tempCover: '',
+      tempAvatarBase64: '',
+      currentDetailId: null,
+      currentEditWorkId: null,
+
+      init() {
+        this.setupAuth();
+        this.setupDatabaseListeners();
+        this.setupEventListeners();
+        this.setCategory('music');
+      },
+
+      setCategory(catId) {
+        this.currentCategory = catId;
+        document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.cat === catId));
+        this.renderHome();
+      },
+
+      navigate(pageId) {
+        if (pageId !== 'detail') this.currentDetailId = null;
+        if (pageId !== 'upload') {
+          this.currentEditWorkId = null;
+          if (document.getElementById('workForm')) {
+            document.getElementById('workForm').reset();
+            document.getElementById('imagePreview').style.backgroundImage = '';
+            document.querySelector('#upload-page h2').innerText = '작품 DB 등록';
+          }
+        }
+        document.querySelectorAll('.page').forEach(p => {
+          if (p.id === pageId + '-page') p.classList.add('active');
+          else p.classList.remove('active');
+        });
+        
+        if (pageId === 'home') this.renderHome();
+        else if (pageId === 'my-page') this.renderMyPage();
+        else if (pageId === 'admin') { this.renderAdmin(); this.renderAdminGenres(); }
+        else if (pageId === 'upload') { this.renderUploadGenreSelect(); }
+        
+        window.scrollTo(0, 0);
+      },
+
+      setupAuth() {
+        onAuthStateChanged(auth, async (user) => {
+          this.currentUser = user;
+          if (user) {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+              this.userProfile = userDoc.data();
+              this.isAdmin = this.userProfile.role === 'admin';
+              document.getElementById('headerNickname').innerText = this.userProfile.nickname || '사용자';
+              document.getElementById('headerAvatar').src = this.userProfile.profileImageUrl || 'https://placehold.co/100x100?text=U';
+            }
+          } else {
+            this.userProfile = null;
+            this.isAdmin = false;
+          }
+          this.updateNavigationUI();
+          this.renderHome();
+        });
+      },
+
+      setupDatabaseListeners() {
+        onSnapshot(collection(db, 'works'), (snapshot) => {
+          this.allWorks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          this.renderHome();
+          if (this.currentDetailId) this.showDetail(this.currentDetailId, true);
+        });
+
+        onSnapshot(collection(db, 'reviews'), (snapshot) => {
+          this.allReviews = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          this.renderHome();
+          if (this.currentDetailId) this.renderReviews();
+        });
+
+        onSnapshot(collection(db, 'users'), (snapshot) => {
+          snapshot.docs.forEach(d => this.allUsers[d.id] = d.data());
+          if (document.getElementById('admin-page').classList.contains('active')) this.renderAdmin();
+        });
+
+        onSnapshot(doc(db, 'settings', 'genres'), (snapshot) => {
+          if (snapshot.exists()) {
+            this.genres = { ...this.genres, ...snapshot.data() };
+            this.renderHome();
+            if (document.getElementById('admin-page').classList.contains('active')) this.renderAdminGenres();
+          }
+        });
+      },
+
+      updateNavigationUI() {
+        const isLoggedIn = !!this.currentUser;
+        document.querySelectorAll('.auth-req').forEach(el => el.style.display = isLoggedIn ? 'flex' : 'none');
+        document.querySelectorAll('.admin-req').forEach(el => el.style.display = (isLoggedIn && this.isAdmin) ? 'flex' : 'none');
+        document.getElementById('nav-login').style.display = isLoggedIn ? 'none' : 'flex';
+        document.getElementById('nav-logout').style.display = isLoggedIn ? 'flex' : 'none';
+        document.getElementById('userProfileDisplay').style.display = isLoggedIn ? 'flex' : 'none';
+      },
+
+      renderHome() {
+        const catWorks = this.allWorks.filter(w => w.category === this.currentCategory);
+        const searchKeyword = document.getElementById('searchInput').value.toLowerCase().trim();
+
+        if (searchKeyword) {
+          document.getElementById('homeDefault').style.display = 'none';
+          document.getElementById('homeSearch').style.display = 'block';
+          const filtered = catWorks.filter(w => w.title.toLowerCase().includes(searchKeyword) || w.creator.toLowerCase().includes(searchKeyword));
+          this.renderWorkGrid(filtered, 'searchGrid');
+        } else {
+          document.getElementById('homeDefault').style.display = 'block';
+          document.getElementById('homeSearch').style.display = 'none';
+          
+          this.renderWorkGrid(catWorks.slice().sort((a,b) => b.timestamp - a.timestamp).slice(0, 10), 'latestSlider');
+          
+          const genreSelect = document.getElementById('homeGenreSelect');
+          const previousVal = genreSelect.value;
+          genreSelect.innerHTML = '<option value="">전체 장르</option>' + this.genres[this.currentCategory].map(g => `<option value="${g}">${g}</option>`).join('');
+          genreSelect.value = this.genres[this.currentCategory].includes(previousVal) ? previousVal : '';
+          
+          const filteredByGenre = genreSelect.value ? catWorks.filter(w => w.genre === genreSelect.value) : catWorks;
+          this.renderWorkGrid(filteredByGenre, 'genreGrid');
+          
+          const recommended = catWorks.slice().sort((a,b) => parseFloat(this.calculateAverageRating(b.id)) - parseFloat(this.calculateAverageRating(a.id))).slice(0, 8);
+          this.renderWorkGrid(recommended, 'recSlider');
+        }
+      },
+
+      renderWorkGrid(data, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = data.map(work => `
+          <div class="album-card" onclick="app.showDetail('${work.id}')">
+            <div class="album-cover">
+              <div class="avg-badge">★ ${this.calculateAverageRating(work.id)}</div>
+              <img src="${work.imageUrl}" loading="lazy" onerror="this.src='https://placehold.co/400x400?text=No+Image'">
+            </div>
+            <div class="album-info">
+              <h3>${work.title}</h3>
+              <p>${work.creator}</p>
+            </div>
+          </div>
+        `).join('') || '<p style="grid-column: 1/-1; text-align: center; padding: 40px 0; color: var(--text-secondary);">표시할 작품이 없습니다.</p>';
+      },
+
+      calculateAverageRating(workId) {
+        const reviews = this.allReviews.filter(r => r.workId === workId);
+        if (reviews.length === 0) return '0.0';
+        const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+        return (sum / reviews.length).toFixed(1);
+      },
+
+      showDetail(id, refreshOnly = false) {
+        const work = this.allWorks.find(w => w.id === id);
+        if (!work) return;
+        this.currentDetailId = id;
+        if (!refreshOnly) this.currentPage = 1;
+
+        document.getElementById('detailHeroContainer').innerHTML = `
+          <div class="detail-hero">
+            <div class="hero-cover"><img src="${work.imageUrl}"></div>
+            <div class="hero-info">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h2>${work.title}</h2>
+                ${this.isAdmin ? `<button class="nav-btn" style="color:var(--accent); font-weight:bold;" onclick="app.editWork('${work.id}')">수정</button>` : ''}
+              </div>
+              <h3 style="margin: 8px 0; color: var(--text-primary); font-size: 20px;">${work.creator}</h3>
+              ${work.cast ? `<p style="color: var(--text-secondary); margin-bottom: 12px;">출연: ${work.cast}</p>` : ''}
+              <div class="meta-tags">
+                <span class="tag">${work.genre}</span>
+                <span class="tag">${work.releaseDate}</span>
+                <span class="tag star">평균 ★ ${this.calculateAverageRating(id)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        this.renderReviews();
+        this.renderSidebar(work.genre, id);
+        if (!refreshOnly) this.navigate('detail');
+      },
+
+      editWork(id) {
+        const work = this.allWorks.find(w => w.id === id);
+        if (!work) return;
+        this.currentEditWorkId = id;
+        this.navigate('upload');
+        document.getElementById('inputTitle').value = work.title;
+        document.getElementById('inputCreator').value = work.creator;
+        document.getElementById('inputCast').value = work.cast || '';
+        document.getElementById('releaseDate').value = work.releaseDate;
+        this.renderUploadGenreSelect();
+        document.getElementById('genreSelect').value = work.genre;
+        this.tempCover = work.imageUrl;
+        document.getElementById('imagePreview').style.backgroundImage = `url(${work.imageUrl})`;
+        document.querySelector('#upload-page h2').innerText = '작품 정보 수정';
+      },
+
+      renderReviews() {
+        const reviews = this.allReviews.filter(r => r.workId === this.currentDetailId).sort((a,b) => b.timestamp - a.timestamp);
+        document.getElementById('reviewCountDisplay').innerText = reviews.length;
+        
+        const dist = [0,0,0,0,0];
+        reviews.forEach(r => {
+          let s = Math.floor(r.rating);
+          if(s >= 1 && s <= 5) dist[s-1]++;
+        });
+        const max = Math.max(...dist, 1);
+        document.getElementById('ratingChart').innerHTML = dist.slice().reverse().map((count, i) => `
+          <div class="dist-bar-row">
+            <div class="dist-label">${5 - i}점</div>
+            <div class="dist-bar-bg"><div class="dist-bar-fill" style="width: ${(count / max) * 100}%;"></div></div>
+            <div class="dist-count">${count}</div>
+          </div>
+        `).join('');
+
+        const start = (this.currentPage - 1) * this.itemsPerPage;
+        const paged = reviews.slice(start, start + this.itemsPerPage);
+        
+        document.getElementById('reviewsList').innerHTML = paged.map(rev => {
+          const u = this.allUsers[rev.uid] || {};
+          const isMe = this.currentUser?.uid === rev.uid;
+          const liked = rev.likes?.includes(this.currentUser?.uid);
+          
+          return `
+            <div class="review-item-card">
+              <div class="review-header">
+                <div class="review-user-info">
+                  <img src="${u.profileImageUrl || 'https://placehold.co/100x100?text=U'}" style="width: 32px; height: 32px; border-radius: 50%;">
+                  <span>${u.nickname || '익명'}</span>
+                </div>
+                <div style="color: #fbbf24; font-weight: bold; font-size: 18px;">★ ${rev.rating.toFixed(1)}</div>
+              </div>
+              <div class="review-body ${rev.isSpoiler ? 'spoiler-overlay' : ''}" onclick="const b = this.querySelector('.spoiler-blur'); if(b){ b.classList.remove('spoiler-blur'); this.querySelector('.spoiler-msg').remove(); this.classList.remove('spoiler-overlay'); }">
+                ${rev.isSpoiler ? `<div class="spoiler-msg"><button>스포일러 보기</button></div>` : ''}
+                <div class="${rev.isSpoiler ? 'spoiler-blur' : ''}">${marked.parse(rev.reviewText)}</div>
+              </div>
+              <div style="margin-top: 16px; display: flex; gap: 20px; font-size: 13px;">
+                <button class="like-btn ${liked ? 'liked' : ''}" onclick="app.toggleLike('${rev.id}')">${liked ? '❤️' : '🤍'} 좋아요 ${rev.likes?.length || 0}</button>
+                ${(isMe || this.isAdmin) ? `<button class="nav-btn" style="color: #ef4444; font-weight: bold;" onclick="app.deleteReview('${rev.id}')">삭제</button>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('') || '<p style="text-align: center; padding: 40px; color: var(--text-secondary);">첫 리뷰를 작성해 보세요!</p>';
+
+        const total = Math.ceil(reviews.length / this.itemsPerPage);
+        let html = '';
+        for (let i = 1; i <= total; i++) {
+          html += `<div class="page-num ${i === this.currentPage ? 'active' : ''}" onclick="app.setPage(${i})">${i}</div>`;
+        }
+        document.getElementById('reviewPagination').innerHTML = html;
+      },
+
+      setPage(p) {
+        this.currentPage = p;
+        this.renderReviews();
+        document.querySelector('.main-content').scrollIntoView({ behavior: 'smooth' });
+      },
+
+      renderSidebar(genre, currentId) {
+        const same = this.allWorks.filter(w => w.category === this.currentCategory && w.genre === genre && w.id !== currentId).sort((a,b) => b.timestamp - a.timestamp).slice(0, 5);
+        document.getElementById('genreSidebar').innerHTML = same.map(w => `
+          <div class="mini-work-card" onclick="app.showDetail('${w.id}')">
+            <img src="${w.imageUrl}" class="mini-cover">
+            <div class="mini-info">
+              <h4>${w.title}</h4>
+              <p>${w.creator}</p>
+              <p style="color: #fbbf24; font-weight: bold; margin-top: 2px;">★ ${this.calculateAverageRating(w.id)}</p>
+            </div>
+          </div>
+        `).join('') || '<p style="font-size: 14px; color: var(--text-secondary);">관련 작품이 없습니다.</p>';
+      },
+
+      renderUploadGenreSelect() {
+        const select = document.getElementById('genreSelect');
+        select.innerHTML = this.genres[this.currentCategory].map(g => `<option value="${g}">${g}</option>`).join('');
+      },
+
+      setupEventListeners() {
+        document.getElementById('searchInput').oninput = () => this.renderHome();
+        document.getElementById('homeGenreSelect').onchange = () => this.renderHome();
+        document.getElementById('nav-logout').onclick = () => signOut(auth);
+        
+        document.getElementById('themeToggle').onclick = () => {
+          document.body.classList.toggle('light-mode');
+          document.getElementById('themeToggle').innerText = document.body.classList.contains('light-mode') ? '🌙 다크' : '☀️ 라이트';
+        };
+
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+          btn.onclick = (e) => this.setCategory(e.target.dataset.cat);
+        });
+
+        document.getElementById('toggleAuthModeBtn').onclick = () => {
+          const isLogin = document.getElementById('authTitle').innerText === '로그인';
+          document.getElementById('authTitle').innerText = isLogin ? '회원가입' : '로그인';
+          document.getElementById('authSubmitBtn').innerText = isLogin ? '가입하기' : '로그인';
+          document.getElementById('signupFields').style.display = isLogin ? 'block' : 'none';
+        };
+
+        document.getElementById('authForm').onsubmit = async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('authEmail').value;
+          const pass = document.getElementById('authPassword').value;
+          const isSignUp = document.getElementById('signupFields').style.display === 'block';
+
+          try {
+            if (isSignUp) {
+              const agree = document.getElementById('authPrivacy').checked;
+              if(!agree) return alert('개인정보 동의가 필요합니다.');
+              const res = await createUserWithEmailAndPassword(auth, email, pass);
+              await setDoc(doc(db, 'users', res.user.uid), {
+                email, nickname: document.getElementById('authNickname').value,
+                gender: document.getElementById('authGender').value, birthYear: document.getElementById('authBirthYear').value,
+                role: 'user', profileImageUrl: this.tempAvatarBase64 || '', timestamp: Date.now()
+              });
+            } else {
+              await signInWithEmailAndPassword(auth, email, pass);
+            }
+            this.navigate('home');
+          } catch(err) { alert(err.message); }
+        };
+
+        document.getElementById('toggleReviewBtn').onclick = () => {
+          if (!this.currentUser) return alert('로그인이 필요합니다.');
+          const section = document.getElementById('reviewInputSection');
+          section.style.display = section.style.display === 'none' ? 'block' : 'none';
+          if (section.style.display === 'block') section.scrollIntoView({ behavior: 'smooth' });
+        };
+        document.getElementById('cancelReviewBtn').onclick = () => document.getElementById('reviewInputSection').style.display = 'none';
+
+        this.initStarRatingSystem();
+
+        document.getElementById('reviewSubmitForm').onsubmit = async (e) => {
+          e.preventDefault();
+          const rating = parseFloat(document.getElementById('ratingInput').value);
+          if (!rating) return alert('별점을 선택해 주세요.');
+          const captcha = e.target.querySelector('[name="g-recaptcha-response"]')?.value;
+          if (!captcha) return alert('캡차 인증을 해주세요.');
+
+          try {
+            await addDoc(collection(db, 'reviews'), {
+              workId: this.currentDetailId, uid: this.currentUser.uid, rating,
+              reviewText: document.getElementById('reviewText').value, isSpoiler: document.getElementById('isSpoiler').checked,
+              likes: [], timestamp: Date.now()
+            });
+            document.getElementById('reviewInputSection').style.display = 'none';
+            document.getElementById('reviewSubmitForm').reset();
+            this.setRating(0);
+          } catch(err) { alert('저장 실패'); }
+        };
+
+        document.querySelectorAll('.md-btn').forEach(btn => {
+          btn.onclick = (e) => {
+            const prefix = e.currentTarget.dataset.prefix;
+            const suffix = e.currentTarget.dataset.suffix;
+            const textarea = document.getElementById('reviewText');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selected = text.substring(start, end);
+            textarea.value = text.substring(0, start) + prefix + selected + suffix + text.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+          };
+        });
+
+        document.getElementById('signupAvatarInput').onchange = (e) => this.processImage(e, 'avatar');
+        document.getElementById('coverImage').onchange = (e) => this.processImage(e, 'cover');
+
+        document.getElementById('workForm').onsubmit = async (e) => {
+          e.preventDefault();
+          const workData = {
+            category: this.currentCategory, title: document.getElementById('inputTitle').value,
+            creator: document.getElementById('inputCreator').value, cast: document.getElementById('inputCast').value,
+            genre: document.getElementById('genreSelect').value, releaseDate: document.getElementById('releaseDate').value,
+            imageUrl: this.tempCover || '', timestamp: Date.now(), uid: this.currentUser.uid
+          };
+          try {
+            if (this.currentEditWorkId) {
+              await updateDoc(doc(db, 'works', this.currentEditWorkId), workData);
+              alert('수정되었습니다.');
+            } else {
+              await addDoc(collection(db, 'works'), workData);
+              alert('등록되었습니다.');
+            }
+            this.navigate('home');
+          } catch(err) { alert('저장 권한이 없습니다.'); }
+        };
+
+        document.getElementById('addGenreBtn').onclick = () => this.addGenre();
+      },
+
+      processImage(e, type) {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (type === 'avatar') {
+            this.tempAvatarBase64 = ev.target.result;
+            document.getElementById('signupPreview').style.backgroundImage = `url(${ev.target.result})`;
+          } else {
+            this.tempCover = ev.target.result;
+            document.getElementById('imagePreview').style.backgroundImage = `url(${ev.target.result})`;
+          }
+        };
+        reader.readAsDataURL(file);
+      },
+
+      initStarRatingSystem() {
+        const ui = document.getElementById('starRatingUI');
+        ui.innerHTML = [1,2,3,4,5].map(i => `<span class="star" data-i="${i}">★</span>`).join('');
+        let hover = 0;
+        ui.onmousemove = (e) => {
+          const s = e.target.closest('.star'); if(!s) return;
+          const i = parseInt(s.dataset.i);
+          const isHalf = (e.clientX - s.getBoundingClientRect().left) < (s.offsetWidth / 2);
+          hover = i - (isHalf ? 0.5 : 0);
+          this.updateStars(hover);
+        };
+        ui.onmouseleave = () => this.updateStars(parseFloat(document.getElementById('ratingInput').value || 0));
+        ui.onclick = () => this.setRating(hover);
+      },
+
+      setRating(val) {
+        document.getElementById('ratingInput').value = val;
+        this.updateStars(val);
+      },
+
+      updateStars(val) {
+        document.querySelectorAll('#starRatingUI .star').forEach((s, i) => {
+          s.classList.toggle('full', val >= i + 1);
+          s.classList.toggle('half', val === i + 0.5);
+        });
+      },
+
+      async toggleLike(id) {
+        if (!this.currentUser) return alert('로그인이 필요합니다.');
+        const rev = this.allReviews.find(r => r.id === id);
+        const ref = doc(db, 'reviews', id);
+        if (rev.likes?.includes(this.currentUser.uid)) await updateDoc(ref, { likes: arrayRemove(this.currentUser.uid) });
+        else await updateDoc(ref, { likes: arrayUnion(this.currentUser.uid) });
+      },
+
+      async deleteReview(id) {
+        if (confirm('삭제하시겠습니까?')) await deleteDoc(doc(db, 'reviews', id));
+      },
+
+      async updateProfile() {
+        const nickname = document.getElementById('editNickname').value;
+        const gender = document.getElementById('editGender').value;
+        const birthYear = document.getElementById('editBirthYear').value;
+        const privacy = document.getElementById('editPrivacy').checked;
+        
+        try {
+          await updateDoc(doc(db, 'users', this.currentUser.uid), {
+            nickname, gender, birthYear, privacy
+          });
+          alert('프로필이 업데이트되었습니다.');
+          document.getElementById('profileEditSection').style.display = 'none';
+          document.querySelector('#my-page-page .nav-btn').style.display = 'block';
+        } catch(err) { alert('업데이트 실패: ' + err.message); }
+      },
+
+      async deleteAccount() {
+        if (!confirm('정말로 탈퇴하시겠습니까? 모든 정보와 리뷰가 영구 삭제될 수 있습니다.')) return;
+        try {
+          // Note: In real production, you might also want to delete Firestore data first
+          await deleteDoc(doc(db, 'users', this.currentUser.uid));
+          await this.currentUser.delete();
+          alert('그동안 이용해주셔서 감사합니다.');
+          location.reload();
+        } catch(err) { alert('탈퇴 실패 (최근 로그인이 필요할 수 있습니다): ' + err.message); }
+      },
+
+      renderMyPage() {
+        document.getElementById('myAvatar').src = this.userProfile?.profileImageUrl || 'https://placehold.co/100x100?text=U';
+        document.getElementById('myNickname').innerText = this.userProfile?.nickname || '닉네임 미설정';
+        document.getElementById('myEmail').innerText = this.currentUser?.email;
+        
+        document.getElementById('editNickname').value = this.userProfile?.nickname || '';
+        document.getElementById('editGender').value = this.userProfile?.gender || 'private';
+        document.getElementById('editBirthYear').value = this.userProfile?.birthYear || '';
+        document.getElementById('editPrivacy').checked = this.userProfile?.privacy || false;
+
+        const ids = this.allReviews.filter(r => r.uid === this.currentUser?.uid).map(r => r.workId);
+        const works = this.allWorks.filter(w => ids.includes(w.id));
+        this.renderWorkGrid(works, 'myReviewedGrid');
+      },
+
+      renderAdmin() {
+        document.getElementById('adminUserList').innerHTML = Object.entries(this.allUsers).map(([uid, u]) => `
+          <tr>
+            <td style="padding: 16px 12px; border-bottom: 1px solid var(--border-color);">${u.email}</td>
+            <td style="border-bottom: 1px solid var(--border-color);">${u.nickname}</td>
+            <td style="border-bottom: 1px solid var(--border-color);">${new Date(u.timestamp || Date.now()).toLocaleDateString()}</td>
+            <td style="border-bottom: 1px solid var(--border-color);">${u.isBlocked ? '<span style="color: #ef4444;">차단됨</span>' : '활성'}</td>
+            <td style="border-bottom: 1px solid var(--border-color);"><button class="nav-btn" onclick="app.toggleBlock('${uid}', ${u.isBlocked})">${u.isBlocked ? '차단 해제' : '차단'}</button></td>
+          </tr>
+        `).join('');
+      },
+
+      async toggleBlock(uid, cur) {
+        await updateDoc(doc(db, 'users', uid), { isBlocked: !cur });
+      },
+
+      renderAdminGenres() {
+        const cat = document.getElementById('adminGenreCat').value;
+        const list = this.genres[cat] || [];
+        document.getElementById('adminGenreList').innerHTML = list.map(g => `
+          <div class="genre-tag">${g} <button class="genre-del-btn" onclick="app.deleteGenre('${cat}', '${g}')">×</button></div>
+        `).join('') || '<p style="color: var(--text-secondary);">등록된 장르가 없습니다.</p>';
+      },
+
+      async addGenre() {
+        const cat = document.getElementById('adminGenreCat').value;
+        const val = document.getElementById('adminGenreInput').value.trim();
+        if (!val || this.genres[cat].includes(val)) return;
+        this.genres[cat].push(val);
+        document.getElementById('adminGenreInput').value = '';
+        this.renderAdminGenres();
+        try { await setDoc(doc(db, 'settings', 'genres'), this.genres); } catch(err) { console.error(err); }
+      },
+
+      async deleteGenre(cat, genre) {
+        if (!confirm(`'${genre}' 장르를 삭제하시겠습니까?`)) return;
+        this.genres[cat] = this.genres[cat].filter(g => g !== genre);
+        this.renderAdminGenres();
+        try { await setDoc(doc(db, 'settings', 'genres'), this.genres); } catch(err) { console.error(err); }
+      }
+    };
+
+    app.init();
+  </script>
+</body>
+</html>
