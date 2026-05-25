@@ -125,14 +125,14 @@
     .album-slider .album-card { flex: 0 0 200px; scroll-snap-align: start; }
     .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; }
     
-    /* 장르별 작품 그리드 축소 */
-    #genreGrid {
+    /* 장르별 및 내 리뷰 목록 그리드 축소 */
+    #genreGrid, #myReviewedGrid {
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: 16px;
     }
-    #genreGrid .album-info h3 { font-size: 14px; }
-    #genreGrid .album-info p { font-size: 12px; }
-    #genreGrid .avg-badge { font-size: 10px; padding: 2px 6px; }
+    #genreGrid .album-info h3, #myReviewedGrid .album-info h3 { font-size: 14px; }
+    #genreGrid .album-info p, #myReviewedGrid .album-info p { font-size: 12px; }
+    #genreGrid .avg-badge, #myReviewedGrid .avg-badge { font-size: 10px; padding: 2px 6px; }
 
     .album-card { cursor: pointer; transition: var(--transition); border-radius: var(--radius-md); overflow: hidden; position: relative; }
     .album-card:hover { transform: translateY(-6px); }
@@ -197,6 +197,68 @@
     .admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     .admin-table th, .admin-table td { padding: 16px 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
     .admin-table th { color: var(--text-secondary); font-weight: 600; }
+
+    /* 회원가입 장르 선택 스타일 */
+    .signup-genres {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--bg-base);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+    .signup-genres h4 { font-size: 14px; margin-bottom: 10px; color: var(--accent); }
+    .genre-checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .genre-checkbox-label { 
+      font-size: 12px; 
+      padding: 4px 10px; 
+      border: 1px solid var(--border-color); 
+      border-radius: 15px; 
+      cursor: pointer; 
+      transition: 0.2s;
+      background: var(--bg-surface);
+    }
+    .genre-checkbox-label input { display: none; }
+    .genre-checkbox-label:has(input:checked) { 
+      background: var(--accent); 
+      color: white; 
+      border-color: var(--accent); 
+    }
+
+    /* 베스트 리뷰 카드 스타일 */
+    .best-review-card {
+      background: linear-gradient(135deg, var(--bg-surface), var(--bg-base));
+      border: 2px solid var(--accent);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 40px;
+      display: flex;
+      gap: 32px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+    }
+    .best-review-card::before {
+      content: '🏆 BEST REVIEW';
+      position: absolute;
+      top: 15px;
+      right: -35px;
+      background: var(--accent);
+      color: white;
+      padding: 8px 40px;
+      font-size: 12px;
+      font-weight: 800;
+      transform: rotate(45deg);
+    }
+    .best-review-card .work-side { width: 140px; flex-shrink: 0; text-align: center; }
+    .best-review-card .work-side img { width: 100%; aspect-ratio: 1; border-radius: var(--radius-md); object-fit: cover; margin-bottom: 12px; border: 1px solid var(--border-color); }
+    .best-review-card .content-side { flex-grow: 1; }
+    .best-review-card .rev-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .best-review-card .rev-text { font-size: 16px; line-height: 1.8; color: var(--text-primary); }
+    @media (max-width: 768px) {
+      .best-review-card { flex-direction: column; padding: 24px; gap: 20px; }
+      .best-review-card .work-side { width: 100%; display: flex; align-items: center; gap: 16px; text-align: left; }
+      .best-review-card .work-side img { width: 80px; margin-bottom: 0; }
+    }
 
     .search-wrapper { display: flex; align-items: center; position: relative; margin-right: 8px; }
     #searchInput { width: 0; padding: 0; border: none; background: var(--input-bg); color: var(--text-primary); border-radius: 20px; transition: width 0.3s ease, padding 0.3s ease, border 0.1s; outline: none; font-size: 14px; }
@@ -280,7 +342,17 @@
           <div class="form-group" style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
             <input type="checkbox" id="authPrivacy" style="width: auto;"> 개인정보 수집 및 이용 동의
           </div>
-          <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" style="display: flex; justify-content: center; margin-bottom: 20px;"></div>
+
+          <!-- 선호 장르 선택 섹션 -->
+          <div class="signup-genres">
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+              ✨ <b>선호 장르를 선택해 주세요 (선택사항)</b><br>
+              선택하신 장르를 바탕으로 홈 화면에서 맞춤 작품을 추천해 드립니다. 언제든 마이페이지에서 수정 가능합니다.
+            </p>
+            <div id="signupGenreContainer"></div>
+          </div>
+
+          <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" style="display: flex; justify-content: center; margin: 20px 0;"></div>
         </div>
         <div class="form-group"><input type="email" id="authEmail" placeholder="이메일 주소" required></div>
         <div class="form-group"><input type="password" id="authPassword" placeholder="비밀번호" required minlength="6"></div>
@@ -295,6 +367,11 @@
 
   <main class="page active" id="home-page">
     <div id="homeDefault">
+      <div id="bestReviewSection" style="display: none; margin-bottom: 40px;">
+        <h3 style="margin-bottom: 16px; font-size: 22px;">🏆 이번 주 베스트 리뷰</h3>
+        <div id="bestReviewContainer"></div>
+      </div>
+
       <div id="musicFilterSection" style="display: none; margin-bottom: 24px;">
         <div class="radio-group" id="homeMusicTypeGroup">
           <label class="radio-item"><input type="radio" name="homeMusicType" value="" checked><span>전체 음악</span></label>
@@ -309,6 +386,7 @@
           <label class="radio-item"><input type="radio" name="homeMovieType" value="international"><span>해외</span></label>
         </div>
       </div>
+      
       <h3 style="margin-bottom: 16px; font-size: 22px;">🎯 맞춤 추천</h3>
       <div class="slider-wrapper">
         <button class="scroll-btn left" onclick="app.scrollSlider('recSlider', -1)">❮</button>
@@ -427,6 +505,13 @@
         <div class="form-group">
           <label><input type="checkbox" id="editPrivacy" style="width: auto;"> 개인정보 공개 동의</label>
         </div>
+        
+        <!-- 선호 장르 수정 섹션 -->
+        <div class="signup-genres" style="margin-bottom: 24px;">
+          <h4 style="margin-bottom: 12px;">🎨 선호 장르 수정</h4>
+          <div id="editGenreContainer"></div>
+        </div>
+
         <div style="display: flex; gap: 12px;">
           <button class="action-btn" style="flex: 1;" onclick="app.updateProfile()">저장하기</button>
           <button class="action-btn" style="flex: 1; background: var(--bg-surface-hover); color: var(--text-primary); border: 1px solid var(--border-color);" onclick="document.getElementById('profileEditSection').style.display='none'; document.querySelector('#my-page-page .nav-btn').style.display='block'">취소</button>
@@ -678,6 +763,26 @@
         window.scrollTo(0, 0);
       },
 
+      renderSignupGenres() {
+        const container = document.getElementById('signupGenreContainer');
+        if (!container) return;
+        
+        let html = '';
+        const cats = { music: '🎵 음악', movie: '🎬 영화/드라마', game: '🎮 게임' };
+        
+        for (const [key, label] of Object.entries(cats)) {
+          html += `<h4>${label}</h4><div class="genre-checkbox-group">`;
+          html += (this.genres[key] || []).map(g => `
+            <label class="genre-checkbox-label">
+              <input type="checkbox" name="favGenre" data-cat="${key}" value="${g}">
+              <span>${g}</span>
+            </label>
+          `).join('');
+          html += `</div>`;
+        }
+        container.innerHTML = html;
+      },
+
       setupAuth() {
         onAuthStateChanged(auth, async (user) => {
           this.currentUser = user;
@@ -770,8 +875,90 @@
         const filteredByGenre = genreSelect.value ? catWorks.filter(w => w.genre === genreSelect.value) : catWorks;
         this.renderWorkGrid(filteredByGenre, 'genreGrid');
         
-        const recommended = catWorks.slice().sort((a,b) => parseFloat(this.calculateAverageRating(b.id)) - parseFloat(this.calculateAverageRating(a.id))).slice(0, 8);
+        // --- 맞춤 추천 로직 ---
+        let recommended = [];
+        const userFavs = this.userProfile?.favorites?.[this.currentCategory] || [];
+        
+        if (userFavs.length > 0) {
+          // 선호 장르 작품들
+          const favWorks = catWorks.filter(w => userFavs.includes(w.genre));
+          // 기타 작품들
+          const otherWorks = catWorks.filter(w => !userFavs.includes(w.genre));
+          
+          // 각각 평점순 정렬 후 합침
+          const sortByRating = (list) => list.sort((a,b) => parseFloat(this.calculateAverageRating(b.id)) - parseFloat(this.calculateAverageRating(a.id)));
+          recommended = [...sortByRating(favWorks), ...sortByRating(otherWorks)].slice(0, 12);
+        } else {
+          // 선호 장르가 없을 경우 단순 평점순
+          recommended = catWorks.slice().sort((a,b) => parseFloat(this.calculateAverageRating(b.id)) - parseFloat(this.calculateAverageRating(a.id))).slice(0, 12);
+        }
+        
         this.renderWorkGrid(recommended, 'recSlider');
+        this.renderBestReviews();
+      },
+
+      renderBestReviews() {
+        const section = document.getElementById('bestReviewSection');
+        const container = document.getElementById('bestReviewContainer');
+        if (!section || !container) return;
+
+        // 1. 모든 베스트 리뷰 필터링 (필드 존재 여부 확인)
+        const bestPool = this.allReviews.filter(r => r.isBest === true);
+        
+        if (bestPool.length === 0) {
+          section.style.display = 'none';
+          return;
+        }
+
+        // 2. 현재 카테고리에 맞는 베스트 리뷰만 추출
+        const catBestPool = bestPool.filter(r => {
+          const work = this.allWorks.find(w => w.id === r.workId);
+          return work && work.category === this.currentCategory;
+        });
+
+        if (catBestPool.length === 0) {
+          section.style.display = 'none';
+          return;
+        }
+
+        // 3. 선호 장르 관련 리뷰 우선 필터링
+        const userFavs = this.userProfile?.favorites?.[this.currentCategory] || [];
+        let filteredPool = catBestPool.filter(r => {
+          const work = this.allWorks.find(w => w.id === r.workId);
+          return userFavs.length === 0 || userFavs.includes(work.genre);
+        });
+
+        // 선호 장르에 베스트가 없으면 그냥 해당 카테고리 전체 베스트 사용
+        if (filteredPool.length === 0) {
+          filteredPool = catBestPool;
+        }
+
+        // 4. 랜덤하게 하나 선택
+        const randomReview = filteredPool[Math.floor(Math.random() * filteredPool.length)];
+        const work = this.allWorks.find(w => w.id === randomReview.workId);
+        const user = this.allUsers[randomReview.uid] || {};
+
+        section.style.display = 'block';
+        container.innerHTML = `
+          <div class="best-review-card" onclick="app.showDetail('${work.id}')" style="cursor:pointer;">
+            <div class="work-side">
+              <img src="${work.imageUrl}">
+              <h4 style="font-size:14px; margin-bottom:4px;">${work.title}</h4>
+              <p style="font-size:12px; color:var(--text-secondary);">${work.creator}</p>
+            </div>
+            <div class="content-side">
+              <div class="rev-header">
+                <img src="${user.profileImageUrl || 'https://placehold.co/100x100?text=U'}" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--accent);">
+                <div>
+                  <div style="font-weight:bold; font-size:15px;">${user.nickname || '익명'} 님의 평론</div>
+                  <div style="color:#fbbf24; font-size:14px;">평점 ★ ${randomReview.rating.toFixed(1)}</div>
+                </div>
+              </div>
+              <div class="rev-text">${randomReview.reviewText.length > 200 ? randomReview.reviewText.substring(0, 200) + '...' : randomReview.reviewText}</div>
+              <div style="margin-top:16px; color:var(--accent); font-weight:bold; font-size:14px;">작품 보러가기 →</div>
+            </div>
+          </div>
+        `;
       },
 
       renderSearch() {
@@ -878,6 +1065,13 @@
         document.querySelector('#reviewInputSection h3').innerText = '리뷰 수정하기';
       },
 
+      async toggleBestReview(id, currentState) {
+        try {
+          await updateDoc(doc(db, 'reviews', id), { isBest: !currentState });
+          alert(currentState ? '베스트 선정에서 제외되었습니다.' : '베스트 리뷰로 선정되었습니다!');
+        } catch(err) { alert('설정 실패: ' + err.message); }
+      },
+
       renderReviews() {
         const reviews = this.allReviews.filter(r => r.workId === this.currentDetailId).sort((a,b) => b.timestamp - a.timestamp);
         document.getElementById('reviewCountDisplay').innerText = reviews.length;
@@ -921,6 +1115,7 @@
                 <button class="like-btn ${liked ? 'liked' : ''}" onclick="app.toggleLike('${rev.id}')">${liked ? '❤️' : '🤍'} 좋아요 ${rev.likes?.length || 0}</button>
                 ${isMe ? `<button class="nav-btn" style="color: var(--accent); font-weight: bold;" onclick="app.editReview('${rev.id}')">수정</button>` : ''}
                 ${(isMe || this.isAdmin) ? `<button class="nav-btn" style="color: #ef4444; font-weight: bold;" onclick="app.deleteReview('${rev.id}')">삭제</button>` : ''}
+                ${this.isAdmin ? `<button class="nav-btn" style="color: #fbbf24; font-weight: bold;" onclick="app.toggleBestReview('${rev.id}', ${rev.isBest})">${rev.isBest ? '⭐ 베스트 취소' : '☆ 베스트 선정'}</button>` : ''}
               </div>
             </div>
           `;
@@ -994,6 +1189,7 @@
           document.getElementById('authTitle').innerText = isLogin ? '회원가입' : '로그인';
           document.getElementById('authSubmitBtn').innerText = isLogin ? '가입하기' : '로그인';
           document.getElementById('signupFields').style.display = isLogin ? 'block' : 'none';
+          if (isLogin) this.renderSignupGenres();
         };
 
         document.getElementById('authForm').onsubmit = async (e) => {
@@ -1006,11 +1202,19 @@
             if (isSignUp) {
               const agree = document.getElementById('authPrivacy').checked;
               if(!agree) return alert('개인정보 동의가 필요합니다.');
+              
+              // 선호 장르 수집
+              const favs = { music: [], movie: [], game: [] };
+              document.querySelectorAll('input[name="favGenre"]:checked').forEach(cb => {
+                favs[cb.dataset.cat].push(cb.value);
+              });
+
               const res = await createUserWithEmailAndPassword(auth, email, pass);
               await setDoc(doc(db, 'users', res.user.uid), {
                 email, nickname: document.getElementById('authNickname').value,
                 gender: document.getElementById('authGender').value, birthYear: document.getElementById('authBirthYear').value,
-                role: 'user', profileImageUrl: this.tempAvatarBase64 || '', timestamp: Date.now()
+                role: 'user', profileImageUrl: this.tempAvatarBase64 || '', timestamp: Date.now(),
+                favorites: favs
               });
             } else {
               await signInWithEmailAndPassword(auth, email, pass);
@@ -1236,9 +1440,16 @@
         const birthYear = document.getElementById('editBirthYear').value;
         const privacy = document.getElementById('editPrivacy').checked;
         
+        // 수정된 선호 장르 수집
+        const favs = { music: [], movie: [], game: [] };
+        document.querySelectorAll('input[name="editFavGenre"]:checked').forEach(cb => {
+          favs[cb.dataset.cat].push(cb.value);
+        });
+
         try {
           await updateDoc(doc(db, 'users', this.currentUser.uid), {
-            nickname, gender, birthYear, privacy
+            nickname, gender, birthYear, privacy,
+            favorites: favs
           });
           alert('프로필이 업데이트되었습니다.');
           document.getElementById('profileEditSection').style.display = 'none';
@@ -1324,6 +1535,29 @@
         document.getElementById('editGender').value = this.userProfile?.gender || 'private';
         document.getElementById('editBirthYear').value = this.userProfile?.birthYear || '';
         document.getElementById('editPrivacy').checked = this.userProfile?.privacy || false;
+
+        // 선호 장르 수정 UI 렌더링
+        const container = document.getElementById('editGenreContainer');
+        if (container) {
+          let html = '';
+          const cats = { music: '🎵 음악', movie: '🎬 영화/드라마', game: '🎮 게임' };
+          const userFavs = this.userProfile?.favorites || { music: [], movie: [], game: [] };
+          
+          for (const [key, label] of Object.entries(cats)) {
+            html += `<h4 style="font-size:13px; margin:12px 0 8px; color:var(--text-secondary);">${label}</h4><div class="genre-checkbox-group">`;
+            html += (this.genres[key] || []).map(g => {
+              const checked = userFavs[key]?.includes(g) ? 'checked' : '';
+              return `
+                <label class="genre-checkbox-label">
+                  <input type="checkbox" name="editFavGenre" data-cat="${key}" value="${g}" ${checked}>
+                  <span>${g}</span>
+                </label>
+              `;
+            }).join('');
+            html += `</div>`;
+          }
+          container.innerHTML = html;
+        }
 
         const ids = this.allReviews.filter(r => r.uid === this.currentUser?.uid).map(r => r.workId);
         const works = this.allWorks.filter(w => ids.includes(w.id));
