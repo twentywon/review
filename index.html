@@ -34,6 +34,37 @@
       --input-bg: #ffffff;
     }
 
+    .notice-bar {
+      background: var(--accent);
+      color: white;
+      padding: 10px 5%;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      display: none;
+      position: relative;
+      z-index: 101;
+      animation: slideDown 0.3s ease-out;
+      cursor: pointer;
+    }
+    .notice-bar.active { display: block; }
+    @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+
+    /* 공지사항 전용 스타일 */
+    .notice-list-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .notice-list-item:hover { transform: translateY(-3px); background: var(--bg-surface-hover); }
+    .notice-list-item h3 { margin-bottom: 8px; color: var(--accent); }
+    .notice-list-item .meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+    .notice-list-item .content { font-size: 15px; line-height: 1.6; }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-base); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; transition: background-color var(--transition), color var(--transition); }
 
@@ -94,6 +125,15 @@
     .album-slider .album-card { flex: 0 0 200px; scroll-snap-align: start; }
     .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; }
     
+    /* 장르별 작품 그리드 축소 */
+    #genreGrid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+    }
+    #genreGrid .album-info h3 { font-size: 14px; }
+    #genreGrid .album-info p { font-size: 12px; }
+    #genreGrid .avg-badge { font-size: 10px; padding: 2px 6px; }
+
     .album-card { cursor: pointer; transition: var(--transition); border-radius: var(--radius-md); overflow: hidden; position: relative; }
     .album-card:hover { transform: translateY(-6px); }
     .album-cover { width: 100%; aspect-ratio: 1 / 1; background-color: var(--bg-surface); border-radius: var(--radius-md); overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 12px; position: relative; }
@@ -164,9 +204,27 @@
     #searchInput.active:focus { border-color: var(--accent); }
 
     #imagePreview:focus { border-color: var(--accent); background: rgba(99, 102, 241, 0.05); }
+
+    /* 달력 아이콘 및 내부 UI 개선 */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1); /* 검은색 아이콘을 흰색으로 반전 */
+      cursor: pointer;
+      opacity: 0.8;
+      transition: 0.2s;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    /* 라이트 모드에서는 다시 어둡게 */
+    body.light-mode input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0);
+    }
   </style>
 </head>
 <body class="dark-mode">
+
+  <div id="noticeBar" class="notice-bar"></div>
 
   <header>
     <div class="logo-area">
@@ -183,6 +241,7 @@
         <button class="nav-btn" id="searchToggleBtn" title="검색" style="font-size: 14px;">🔍 검색</button>
       </div>
       <button class="nav-btn" onclick="app.navigate('home')">홈</button>
+      <button class="nav-btn" onclick="app.navigate('notice')">공지사항</button>
       <button class="nav-btn auth-req" id="nav-my-page" style="display:none" onclick="app.navigate('my-page')">마이페이지</button>
       <button class="nav-btn admin-req" id="nav-admin" style="display:none; color:#ef4444; font-weight:bold;" onclick="app.navigate('admin')">관리자</button>
       <button class="nav-btn" id="themeToggle">☀️ 라이트</button>
@@ -194,6 +253,15 @@
       <button class="nav-btn primary auth-req" id="nav-upload" style="display:none" onclick="app.navigate('upload')">+ 새 작품</button>
     </nav>
   </header>
+
+  <main class="page" id="notice-page">
+    <div class="card-container" style="max-width: 800px; margin: 0 auto; background: transparent; border: none; box-shadow: none;">
+      <h2 style="margin-bottom: 32px; text-align: center; font-size: 32px;">공지사항</h2>
+      <div id="noticeListContainer">
+        <!-- Notices will be injected here -->
+      </div>
+    </div>
+  </main>
 
   <main class="page" id="auth-page">
     <div class="card-container" style="max-width: 450px; margin-top: 40px;">
@@ -260,10 +328,14 @@
       </div>
       <div class="album-grid" id="genreGrid"></div>
     </div>
-    <div id="homeSearch" style="display: none;">
-      <h3 style="margin-bottom: 24px; font-size: 24px;">검색 결과</h3>
-      <div class="album-grid" id="searchGrid"></div>
+  </main>
+
+  <main class="page" id="search-page">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <h2 style="font-size: 28px;">검색 결과</h2>
+      <button class="nav-btn" onclick="app.navigate('home')">← 홈으로 돌아가기</button>
     </div>
+    <div class="album-grid" id="searchGrid"></div>
   </main>
 
   <main class="page" id="detail-page">
@@ -399,8 +471,12 @@
       <div class="form-group"><label id="labelTitle">작품 제목</label><input type="text" id="inputTitle" required placeholder="예: Inception"></div>
       <div class="form-group">
         <label id="labelCreator">제작자 (아티스트/감독/개발사)</label>
-        <input type="text" id="inputCreator" required placeholder="예: Christopher Nolan" list="creatorSuggestions">
-        <datalist id="creatorSuggestions"></datalist>
+        <div style="display: flex; gap: 10px;">
+          <select id="selectCreator" style="flex: 1;" onchange="if(this.value === 'manual') { document.getElementById('inputCreator').style.display = 'block'; document.getElementById('inputCreator').required = true; } else { document.getElementById('inputCreator').style.display = 'none'; document.getElementById('inputCreator').required = false; }">
+            <!-- Options populated by JS -->
+          </select>
+          <input type="text" id="inputCreator" style="display: none; flex: 1;" placeholder="직접 입력...">
+        </div>
       </div>
       <div class="form-group" id="castGroup" style="display: none;"><label>출연진</label><input type="text" id="inputCast" placeholder="예: Leonardo DiCaprio"></div>
       <div class="row" style="display: flex; gap: 20px;">
@@ -413,6 +489,27 @@
 
   <main class="page" id="admin-page">
     <h2 style="margin-bottom: 32px;">관리자 대시보드</h2>
+    <div class="card-container" style="max-width: 100%; margin-bottom: 32px;">
+      <h3 style="margin-bottom: 16px;">📢 공지사항 관리</h3>
+      <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">새로운 공지사항을 등록하고 목록을 관리합니다.</p>
+      
+      <form id="adminNoticeForm" style="margin-bottom: 24px; padding: 20px; background: var(--bg-surface-hover); border-radius: 8px;">
+        <div class="form-group">
+          <label>공지 제목</label>
+          <input type="text" id="adminNoticeTitle" placeholder="공지사항 제목" required>
+        </div>
+        <div class="form-group">
+          <label>공지 내용 (Markdown 지원)</label>
+          <textarea id="adminNoticeContent" placeholder="공지사항 내용" style="min-height: 100px;" required></textarea>
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="adminNoticeIsTop" style="width: auto;"> 상단 바(Bar)에 노출하기 (최신 1개만 적용)
+        </div>
+        <button type="submit" class="action-btn" style="width: auto; padding: 10px 32px;">새 공지 등록</button>
+      </form>
+
+      <div id="adminNoticeList" style="display: flex; flex-direction: column; gap: 12px;"></div>
+    </div>
     <div class="card-container" style="max-width: 100%; margin-bottom: 32px;">
       <h3 style="margin-bottom: 16px;">🏷️ 장르 데이터 관리</h3>
       <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">카테고리별 장르를 추가하거나 삭제할 수 있습니다.</p>
@@ -462,6 +559,7 @@
       allWorks: [],
       allReviews: [],
       allUsers: {},
+      allNotices: [],
       genres: { music: ['K-Pop', 'Pop', 'Rock', 'Hip-Hop', 'Jazz'], movie: ['액션', '로맨스', '공포', 'SF', '드라마'], game: ['RPG', 'FPS', '액션', '스포츠'] },
       currentPage: 1,
       itemsPerPage: 5,
@@ -532,13 +630,22 @@
       },
 
       updateCreatorSuggestions() {
-        const datalist = document.getElementById('creatorSuggestions');
-        if (!datalist) return;
+        const select = document.getElementById('selectCreator');
+        if (!select) return;
         const creators = [...new Set(this.allWorks
           .filter(w => w.category === this.currentCategory)
           .map(w => w.creator))]
           .sort();
-        datalist.innerHTML = creators.map(c => `<option value="${c}">`).join('');
+        
+        let html = '<option value="">선택해 주세요</option>';
+        html += creators.map(c => `<option value="${c}">${c}</option>`).join('');
+        html += '<option value="manual">+ 직접 입력하기</option>';
+        
+        select.innerHTML = html;
+        select.value = '';
+        document.getElementById('inputCreator').style.display = 'none';
+        document.getElementById('inputCreator').required = false;
+        document.getElementById('inputCreator').value = '';
       },
 
       navigate(pageId) {
@@ -557,7 +664,13 @@
           else p.classList.remove('active');
         });
         
-        if (pageId === 'home') this.renderHome();
+        if (pageId === 'home') {
+          document.getElementById('searchInput').value = '';
+          document.getElementById('searchInput').classList.remove('active');
+          this.renderHome();
+        }
+        else if (pageId === 'search') this.renderSearch();
+        else if (pageId === 'notice') this.renderNoticePage();
         else if (pageId === 'my-page') this.renderMyPage();
         else if (pageId === 'admin') { this.renderAdmin(); this.renderAdminGenres(); }
         else if (pageId === 'upload') { this.renderUploadGenreSelect(); }
@@ -589,6 +702,7 @@
         onSnapshot(collection(db, 'works'), (snapshot) => {
           this.allWorks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           this.renderHome();
+          this.updateCreatorSuggestions();
           if (this.currentDetailId) this.showDetail(this.currentDetailId, true);
         });
 
@@ -610,6 +724,18 @@
             if (document.getElementById('admin-page').classList.contains('active')) this.renderAdminGenres();
           }
         });
+
+        onSnapshot(collection(db, 'notices'), (snapshot) => {
+          this.allNotices = snapshot.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.timestamp - a.timestamp);
+          this.renderNoticeBar();
+          
+          if (document.getElementById('notice-page').classList.contains('active')) {
+            this.renderNoticePage();
+          }
+          if (document.getElementById('admin-page').classList.contains('active')) {
+            this.renderAdminNotices();
+          }
+        });
       },
 
       updateNavigationUI() {
@@ -623,7 +749,6 @@
 
       renderHome() {
         let catWorks = this.allWorks.filter(w => w.category === this.currentCategory);
-        const searchKeyword = document.getElementById('searchInput').value.toLowerCase().trim();
 
         if (this.currentCategory === 'music') {
           const checked = document.querySelector('input[name="homeMusicType"]:checked');
@@ -635,28 +760,25 @@
           if (mType) catWorks = catWorks.filter(w => w.movieType === mType);
         }
 
-        if (searchKeyword) {
-          document.getElementById('homeDefault').style.display = 'none';
-          document.getElementById('homeSearch').style.display = 'block';
-          const filtered = catWorks.filter(w => w.title.toLowerCase().includes(searchKeyword) || w.creator.toLowerCase().includes(searchKeyword));
-          this.renderWorkGrid(filtered, 'searchGrid');
-        } else {
-          document.getElementById('homeDefault').style.display = 'block';
-          document.getElementById('homeSearch').style.display = 'none';
-          
-          this.renderWorkGrid(catWorks.slice().sort((a,b) => b.timestamp - a.timestamp).slice(0, 10), 'latestSlider');
-          
-          const genreSelect = document.getElementById('homeGenreSelect');
-          const previousVal = genreSelect.value;
-          genreSelect.innerHTML = '<option value="">전체 장르</option>' + this.genres[this.currentCategory].map(g => `<option value="${g}">${g}</option>`).join('');
-          genreSelect.value = this.genres[this.currentCategory].includes(previousVal) ? previousVal : '';
-          
-          const filteredByGenre = genreSelect.value ? catWorks.filter(w => w.genre === genreSelect.value) : catWorks;
-          this.renderWorkGrid(filteredByGenre, 'genreGrid');
-          
-          const recommended = catWorks.slice().sort((a,b) => parseFloat(this.calculateAverageRating(b.id)) - parseFloat(this.calculateAverageRating(a.id))).slice(0, 8);
-          this.renderWorkGrid(recommended, 'recSlider');
-        }
+        this.renderWorkGrid(catWorks.slice().sort((a,b) => b.timestamp - a.timestamp).slice(0, 10), 'latestSlider');
+        
+        const genreSelect = document.getElementById('homeGenreSelect');
+        const previousVal = genreSelect.value;
+        genreSelect.innerHTML = '<option value="">전체 장르</option>' + this.genres[this.currentCategory].map(g => `<option value="${g}">${g}</option>`).join('');
+        genreSelect.value = this.genres[this.currentCategory].includes(previousVal) ? previousVal : '';
+        
+        const filteredByGenre = genreSelect.value ? catWorks.filter(w => w.genre === genreSelect.value) : catWorks;
+        this.renderWorkGrid(filteredByGenre, 'genreGrid');
+        
+        const recommended = catWorks.slice().sort((a,b) => parseFloat(this.calculateAverageRating(b.id)) - parseFloat(this.calculateAverageRating(a.id))).slice(0, 8);
+        this.renderWorkGrid(recommended, 'recSlider');
+      },
+
+      renderSearch() {
+        const searchKeyword = document.getElementById('searchInput').value.toLowerCase().trim();
+        const catWorks = this.allWorks.filter(w => w.category === this.currentCategory);
+        const filtered = catWorks.filter(w => w.title.toLowerCase().includes(searchKeyword) || w.creator.toLowerCase().includes(searchKeyword));
+        this.renderWorkGrid(filtered, 'searchGrid');
       },
 
       renderWorkGrid(data, containerId) {
@@ -842,9 +964,19 @@
           const input = document.getElementById('searchInput');
           input.classList.toggle('active');
           if (input.classList.contains('active')) input.focus();
-          else { input.value = ''; this.renderHome(); }
+          else if (input.value.trim() !== '') {
+            this.navigate('search');
+          } else {
+             this.navigate('home');
+          }
         };
-        document.getElementById('searchInput').oninput = () => this.renderHome();
+        
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' && e.target.value.trim() !== '') {
+            this.navigate('search');
+          }
+        });
+        
         document.getElementById('homeGenreSelect').onchange = () => this.renderHome();
         document.getElementById('nav-logout').onclick = () => signOut(auth);
         
@@ -949,9 +1081,12 @@
           e.preventDefault();
           if (!this.currentUser) return alert('로그인이 필요한 서비스입니다.');
           
+          let creatorVal = document.getElementById('selectCreator').value;
+          if (creatorVal === 'manual') creatorVal = document.getElementById('inputCreator').value.trim();
+
           const workData = {
             category: this.currentCategory, title: document.getElementById('inputTitle').value,
-            creator: document.getElementById('inputCreator').value, cast: document.getElementById('inputCast').value,
+            creator: creatorVal, cast: document.getElementById('inputCast').value,
             genre: document.getElementById('genreSelect').value, releaseDate: document.getElementById('releaseDate').value,
             imageUrl: this.tempCover || '', timestamp: Date.now(), uid: this.currentUser.uid
           };
@@ -979,40 +1114,81 @@
 
         document.getElementById('addGenreBtn').onclick = () => this.addGenre();
 
+        document.getElementById('adminNoticeForm').onsubmit = async (e) => {
+          e.preventDefault();
+          const title = document.getElementById('adminNoticeTitle').value.trim();
+          const content = document.getElementById('adminNoticeContent').value.trim();
+          const isTop = document.getElementById('adminNoticeIsTop').checked;
+          try {
+            await addDoc(collection(db, 'notices'), { title, content, isTop, timestamp: Date.now() });
+            alert('새 공지가 등록되었습니다.');
+            e.target.reset();
+          } catch(err) { alert('등록 실패: ' + err.message); }
+        };
+
         // Add Global Paste Event
-        window.addEventListener('paste', (e) => {
+        window.addEventListener('paste', async (e) => {
           if (!document.getElementById('upload-page').classList.contains('active')) return;
           const items = e.clipboardData.items;
           for (let i = 0; i < items.length; i++) {
             if (items[i].type.indexOf('image') !== -1) {
-              const blob = items[i].getAsFile();
-              const reader = new FileReader();
-              reader.onload = (event) => {
-                this.tempCover = event.target.result;
-                document.getElementById('imagePreview').style.backgroundImage = `url(${event.target.result})`;
-                document.getElementById('previewPlaceholder').style.display = 'none';
-              };
-              reader.readAsDataURL(blob);
+              const file = items[i].getAsFile();
+              const resized = await this.resizeImage(file, 800, 800);
+              this.tempCover = resized;
+              document.getElementById('imagePreview').style.backgroundImage = `url(${resized})`;
+              document.getElementById('previewPlaceholder').style.display = 'none';
               break;
             }
           }
         });
       },
 
-      processImage(e, type) {
+      resizeImage(file, maxWidth, maxHeight) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+
+              if (width > height) {
+                if (width > maxWidth) {
+                  height *= maxWidth / width;
+                  width = maxWidth;
+                }
+              } else {
+                if (height > maxHeight) {
+                  width *= maxHeight / height;
+                  height = maxHeight;
+                }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.7)); // 70% 품질의 JPEG로 압축
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      },
+
+      async processImage(e, type) {
         const file = e.target.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          if (type === 'avatar') {
-            this.tempAvatarBase64 = ev.target.result;
-            document.getElementById('signupPreview').style.backgroundImage = `url(${ev.target.result})`;
-          } else {
-            this.tempCover = ev.target.result;
-            document.getElementById('imagePreview').style.backgroundImage = `url(${ev.target.result})`;
-            document.getElementById('previewPlaceholder').style.display = 'none';
-          }
-        };
-        reader.readAsDataURL(file);
+        const resized = await this.resizeImage(file, 800, 800);
+        
+        if (type === 'avatar') {
+          this.tempAvatarBase64 = resized;
+          document.getElementById('signupPreview').style.backgroundImage = `url(${resized})`;
+        } else {
+          this.tempCover = resized;
+          document.getElementById('imagePreview').style.backgroundImage = `url(${resized})`;
+          document.getElementById('previewPlaceholder').style.display = 'none';
+        }
       },
 
       initStarRatingSystem() {
@@ -1079,6 +1255,64 @@
           alert('그동안 이용해주셔서 감사합니다.');
           location.reload();
         } catch(err) { alert('탈퇴 실패 (최근 로그인이 필요할 수 있습니다): ' + err.message); }
+      },
+
+      renderNoticeBar() {
+        const topNotice = this.allNotices.find(n => n.isTop);
+        const bar = document.getElementById('noticeBar');
+        if (topNotice) {
+          bar.innerText = `📢 ${topNotice.title}`;
+          bar.classList.add('active');
+          bar.onclick = () => this.navigate('notice');
+        } else {
+          bar.classList.remove('active');
+          bar.onclick = null;
+        }
+      },
+
+      renderNoticePage() {
+        const container = document.getElementById('noticeListContainer');
+        container.innerHTML = this.allNotices.map(n => `
+          <div class="notice-list-item">
+            ${n.isTop ? '<span style="background:var(--accent); color:white; font-size:11px; padding:2px 6px; border-radius:4px; margin-bottom:8px; display:inline-block; font-weight:bold;">상단 고정</span>' : ''}
+            <h3>${n.title}</h3>
+            <div class="meta">${new Date(n.timestamp).toLocaleDateString()}</div>
+            <div class="content">${marked.parse(n.content)}</div>
+          </div>
+        `).join('') || '<p style="text-align:center; padding: 40px; color: var(--text-secondary);">등록된 공지사항이 없습니다.</p>';
+      },
+
+      renderAdminNotices() {
+        const container = document.getElementById('adminNoticeList');
+        container.innerHTML = this.allNotices.map(n => `
+          <div style="background: var(--bg-surface); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h4 style="margin-bottom: 4px; color: var(--text-primary);">${n.isTop ? '📌 ' : ''}${n.title}</h4>
+              <p style="font-size: 13px; color: var(--text-secondary);">${new Date(n.timestamp).toLocaleDateString()}</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="nav-btn" style="color: ${n.isTop ? 'var(--text-secondary)' : 'var(--accent)'};" onclick="app.toggleNoticeTop('${n.id}', ${n.isTop})">
+                ${n.isTop ? '고정 해제' : '상단 고정'}
+              </button>
+              <button class="nav-btn" style="color: #ef4444;" onclick="app.deleteNotice('${n.id}')">삭제</button>
+            </div>
+          </div>
+        `).join('') || '<p style="font-size:14px; color:var(--text-secondary);">등록된 공지사항이 없습니다.</p>';
+      },
+
+      async toggleNoticeTop(id, currentState) {
+        if (!currentState) {
+          // If making this top, un-top all others first
+          const batchPromises = this.allNotices.filter(n => n.isTop).map(n => updateDoc(doc(db, 'notices', n.id), { isTop: false }));
+          await Promise.all(batchPromises);
+        }
+        await updateDoc(doc(db, 'notices', id), { isTop: !currentState });
+      },
+
+      async deleteNotice(id) {
+        if(confirm('이 공지사항을 삭제하시겠습니까?')) {
+          await deleteDoc(doc(db, 'notices', id));
+        }
       },
 
       renderMyPage() {
