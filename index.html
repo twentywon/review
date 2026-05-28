@@ -256,7 +256,74 @@
     }
     .best-review-card .work-side { width: 140px; flex-shrink: 0; text-align: center; }
     .best-review-card .work-side img { width: 100%; aspect-ratio: 2 / 3; border-radius: var(--radius-md); object-fit: cover; margin-bottom: 12px; border: 1px solid var(--border-color); }
+    body[data-category="music"] .best-review-card .work-side img { aspect-ratio: 1 / 1; }
     .best-review-card .content-side { flex-grow: 1; }
+
+    /* 장르별 전용 리스트 UI (전 카테고리 공통) */
+    .genre-list-view {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .genre-item-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .genre-item-row:hover {
+      background: var(--bg-surface-hover);
+      transform: translateX(6px);
+      border-color: var(--accent);
+    }
+    .genre-item-row img {
+      width: 54px;
+      height: 54px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .genre-item-body {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .genre-item-body h4 {
+      font-size: 15px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .genre-item-body p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .genre-item-meta {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .genre-item-rating {
+      font-weight: 800;
+      color: #fbbf24;
+      font-size: 15px;
+    }
+    .genre-item-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
     .best-review-card .rev-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
     .best-review-card .rev-text { font-size: 16px; line-height: 1.8; color: var(--text-primary); }
     @media (max-width: 768px) {
@@ -491,6 +558,7 @@
         <div class="genre-chips-wrapper" id="homeGenreChips"></div>
       </div>
       <div class="album-grid" id="genreGrid"></div>
+      <div class="pagination" id="genrePagination"></div>
     </div>
   </main>
 
@@ -734,7 +802,9 @@
       genres: { music: ['K-Pop', 'Pop', 'Rock', 'Hip-Hop', 'Jazz'], movie: ['액션', '로맨스', '공포', 'SF', '드라마'], game: ['RPG', 'FPS', '액션', '스포츠'] },
       selectedGenre: '',
       currentPage: 1,
+      currentGenrePage: 1,
       itemsPerPage: 5,
+      genreItemsPerPage: 10,
       tempCover: '',
       tempAvatarBase64: '',
       currentDetailId: null,
@@ -764,6 +834,7 @@
         this.currentCategory = catId;
         document.body.dataset.category = catId;
         this.selectedGenre = '';
+        this.currentGenrePage = 1;
         document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.cat === catId));
         
         // Update visibility of category-specific filters/fields
@@ -801,6 +872,11 @@
           lCreator.innerText = '개발사'; iCreator.placeholder = '예: 라이엇 게임즈';
           lDate.innerText = '발매일';
           iDate.type = 'date';
+        }
+
+        const genreGrid = document.getElementById('genreGrid');
+        if (genreGrid) {
+          genreGrid.className = 'genre-list-view';
         }
 
         this.renderHome();
@@ -983,7 +1059,7 @@
         }
         
         const filteredByGenre = this.selectedGenre ? catWorks.filter(w => w.genre === this.selectedGenre) : catWorks;
-        this.renderWorkGrid(filteredByGenre, 'genreGrid');
+        this.renderGenreList(filteredByGenre, 'genreGrid');
         
         // --- 맞춤 추천 로직 ---
         let recommended = [];
@@ -1009,6 +1085,7 @@
 
       setHomeGenre(genre) {
         this.selectedGenre = genre;
+        this.currentGenrePage = 1;
         this.renderHome();
       },
 
@@ -1096,6 +1173,45 @@
             </div>
           </div>
         `).join('') || '<p style="grid-column: 1/-1; text-align: center; padding: 40px 0; color: var(--text-secondary);">표시할 작품이 없습니다.</p>';
+      },
+
+      renderGenreList(data, containerId) {
+        const container = document.getElementById(containerId);
+        const pagContainer = document.getElementById('genrePagination');
+        if (!container) return;
+        
+        const sortedData = data.slice().sort((a,b) => b.timestamp - a.timestamp);
+        const start = (this.currentGenrePage - 1) * this.genreItemsPerPage;
+        const paged = sortedData.slice(start, start + this.genreItemsPerPage);
+
+        container.innerHTML = paged.map(work => `
+          <div class="genre-item-row" onclick="app.showDetail('${work.id}')">
+            <img src="${work.imageUrl}" loading="lazy" onerror="this.src='https://placehold.co/100x100?text=No+Image'">
+            <div class="genre-item-body">
+              <h4>${work.title}</h4>
+              <p>${work.creator}</p>
+            </div>
+            <div class="genre-item-meta">
+              <div class="genre-item-rating">★ ${this.calculateAverageRating(work.id)}</div>
+              <div class="genre-item-label">${work.genre}</div>
+            </div>
+          </div>
+        `).join('') || '<p style="text-align: center; padding: 40px 0; color: var(--text-secondary);">표시할 작품이 없습니다.</p>';
+
+        if (pagContainer) {
+          const total = Math.ceil(sortedData.length / this.genreItemsPerPage);
+          let html = '';
+          for (let i = 1; i <= total; i++) {
+            html += `<div class="page-num ${i === this.currentGenrePage ? 'active' : ''}" onclick="app.setGenrePage(${i})">${i}</div>`;
+          }
+          pagContainer.innerHTML = html;
+        }
+      },
+
+      setGenrePage(p) {
+        this.currentGenrePage = p;
+        this.renderHome();
+        document.getElementById('homeGenreChips').scrollIntoView({ behavior: 'smooth' });
       },
 
       calculateAverageRating(workId) {
